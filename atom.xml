@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2021-04-12T08:40:55.572Z</updated>
+  <updated>2021-04-12T13:43:04.087Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -15,6 +15,37 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>LeetCode之最大数</title>
+    <link href="http://kiragoo.github.com/2021/04/12/LeetCode%E4%B9%8B%E6%9C%80%E5%A4%A7%E6%95%B0/"/>
+    <id>http://kiragoo.github.com/2021/04/12/LeetCode%E4%B9%8B%E6%9C%80%E5%A4%A7%E6%95%B0/</id>
+    <published>2021-04-12T13:35:49.000Z</published>
+    <updated>2021-04-12T13:43:04.087Z</updated>
+    
+    <content type="html"><![CDATA[<p>题目描述：<br>给定一组非负整数 nums，重新排列每个数的顺序（每个数不可拆分）使之组成一个最大的整数。</p><p>注意：输出结果可能非常大，所以你需要返回一个字符串而不是整数。<br><img src="http://tva3.sinaimg.cn/wap800/7a56748fgy1gphahet6udj210g0yon05.jpg" alt="描述"><br><a href="https://leetcode-cn.com/problems/largest-number/">链接</a></p><h1 id="leetcode每日一题"><a href="#leetcode每日一题" class="headerlink" title="leetcode每日一题"></a>leetcode每日一题</h1><p>代码如下:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">    private class  LargerNumberComparator implements Comparator&lt;String&gt; &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public int compare(String a, String b) &#123;</span><br><span class="line">            String order1 &#x3D; a + b;</span><br><span class="line">            String order2 &#x3D; b + a;</span><br><span class="line">           return order2.compareTo(order1);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String largestNumber(int[] nums) &#123;</span><br><span class="line">        String[] tmpNums &#x3D; new String[nums.length];</span><br><span class="line">        for(int i&#x3D;0;i&lt;nums.length;i++) tmpNums[i] &#x3D;String.valueOf(nums[i]);</span><br><span class="line">        Arrays.sort(tmpNums, new LargerNumberComparator());</span><br><span class="line">        if(tmpNums[0].equals(&quot;0&quot;)) return &quot;0&quot;;</span><br><span class="line">        StringBuilder sb &#x3D; new StringBuilder();</span><br><span class="line">        for(String s:tmpNums)&#123;</span><br><span class="line">            sb.append(s);</span><br><span class="line">        &#125;</span><br><span class="line">        return sb.toString();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;golang</span><br><span class="line">func largestNumber(nums []int) string &#123;</span><br><span class="line">ss :&#x3D; make([]string, len(nums))</span><br><span class="line">for i, num :&#x3D; range nums &#123;</span><br><span class="line">ss[i] &#x3D; strconv.Itoa(num)</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line">sort.Slice(ss, func(i, j int) bool &#123;</span><br><span class="line">return ss[i]+ss[j] &gt;&#x3D; ss[j]+ss[i]</span><br><span class="line">&#125;)</span><br><span class="line">o :&#x3D; strings.Join(ss, &quot;&quot;)</span><br><span class="line">if o[0] &#x3D;&#x3D; &#39;0&#39; &#123;</span><br><span class="line">return &quot;0&quot;</span><br><span class="line">&#125;</span><br><span class="line">return o</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    
+    <summary type="html">leetcode 每日一题</summary>
+    
+    
+    
+    <category term="编程" scheme="http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/"/>
+    
+    <category term="算法" scheme="http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/"/>
+    
+    <category term="leetcode" scheme="http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/leetcode/"/>
+    
+    
+    <category term="golang" scheme="http://kiragoo.github.com/tags/golang/"/>
+    
+    <category term="算法" scheme="http://kiragoo.github.com/tags/%E7%AE%97%E6%B3%95/"/>
+    
+    <category term="leetcode" scheme="http://kiragoo.github.com/tags/leetcode/"/>
+    
+    <category term="java" scheme="http://kiragoo.github.com/tags/java/"/>
+    
+  </entry>
   
   <entry>
     <title>kubernetes源码分析系列之kube-scheduler-1</title>
