@@ -74,6 +74,20 @@
   </url>
   
   <url>
+    <loc>http://kiragoo.github.com/tags/k8s/</loc>
+    <lastmod>2021-04-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/kubeadm/</loc>
+    <lastmod>2021-04-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/tags/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2021-04-12</lastmod>
     <changefreq>daily</changefreq>
@@ -89,20 +103,6 @@
   
   <url>
     <loc>http://kiragoo.github.com/tags/java/</loc>
-    <lastmod>2021-04-12</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/k8s/</loc>
-    <lastmod>2021-04-12</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/kubeadm/</loc>
     <lastmod>2021-04-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -139,14 +139,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <loc>http://kiragoo.github.com/categories/k8s/</loc>
     <lastmod>2021-04-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/k8s/</loc>
+    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/</loc>
     <lastmod>2021-04-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
