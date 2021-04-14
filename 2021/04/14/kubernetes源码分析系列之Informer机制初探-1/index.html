@@ -1,0 +1,373 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>kubernetes源码分析系列之Informer机制初探-1 | kirago杂谈</title><meta name="keywords" content="Informer,client-go"><meta name="author" content="kirago"><meta name="copyright" content="kirago"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="kubernetes v1.19.8 源码分析系列之 Informer 机制初探">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kubernetes源码分析系列之Informer机制初探-1">
+<meta property="og:url" content="http://kiragoo.github.com/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/index.html">
+<meta property="og:site_name" content="kirago杂谈">
+<meta property="og:description" content="kubernetes v1.19.8 源码分析系列之 Informer 机制初探">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg">
+<meta property="article:published_time" content="2021-04-14T03:41:49.000Z">
+<meta property="article:modified_time" content="2021-04-14T12:18:28.831Z">
+<meta property="article:author" content="kirago">
+<meta property="article:tag" content="kubernetes">
+<meta property="article:tag" content="源码分析">
+<meta property="article:tag" content="Informer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://kiragoo.github.com/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-04-14 20:18:28'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="kirago杂谈" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-book"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/messageboard/"><i class="fa-fw fas fa-coffee"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">kirago杂谈</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-book"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/messageboard/"><i class="fa-fw fas fa-coffee"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">kubernetes源码分析系列之Informer机制初探-1</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-14T03:41:49.000Z" title="发表于 2021-04-14 11:41:49">2021-04-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-04-14T12:18:28.831Z" title="更新于 2021-04-14 20:18:28">2021-04-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/kubernetes/">kubernetes</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/kubernetes/Informer/">Informer</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/kubernetes/Informer/client-go/">client-go</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="kubernetes源码分析系列之Informer机制初探-1"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>此篇虽然为<code>Informer</code>机制，实际上还是和上篇<a target="_blank" rel="noopener" href="https://kiragoo.github.io/2021/04/12/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8Bkube-scheduler-2/">kubernetes源码分析系列之kube-scheduler-2</a>有很大关系的，可以说也是<code>kube-scheduler</code>调度的<strong>驱动事件</strong>。</p>
+<p>发生<code>Pod</code>调度分配资源，必然是存在一个事件触发调度，那么<code>Informer</code>就是充当这样的角色。<br>具体代码入口<code>cmd/kube-scheduler/app/server.go</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">   &#x2F;&#x2F; 通过 &#96;goroutine&#96; 开始了所有的&#96;informers&#96;</span><br><span class="line">&#x2F;&#x2F; Start all informers.</span><br><span class="line">go cc.PodInformer.Informer().Run(ctx.Done())</span><br><span class="line">cc.InformerFactory.Start(ctx.Done())</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Wait for all caches to sync before scheduling.</span><br><span class="line">cc.InformerFactory.WaitForCacheSync(ctx.Done())</span><br></pre></td></tr></table></figure>
+<p>下面进入正文，开始<code>Informer</code>分析之旅.<br><strong>以下分析默认包路径为<code>client-go</code></strong></p>
+<hr>
+<h1 id="Demo入口"><a href="#Demo入口" class="headerlink" title="Demo入口"></a><code>Demo</code>入口</h1><p>借助<code>client-go</code>完成入口<code>demo</code>的编写<br><img src="http://tvax2.sinaimg.cn/wap800/7a56748fly1gpj69erya4j207l05gt8q.jpg" alt="目录结构"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	cfg, err :&#x3D; clientcmd.BuildConfigFromFlags(&quot;&quot;, &quot;&#x2F;xxx&#x2F;config&quot;)</span><br><span class="line">	if err !&#x3D; nil &#123;</span><br><span class="line">			panic(err)</span><br><span class="line">		&#125;</span><br><span class="line">    &#x2F;&#x2F; 构建 &#96;clientset&#96; 对象，因为&#96;Informer&#96;需要通过&#96;ClientSet&#96;与&#96;Kubernertes API Server&#96;进行交互。</span><br><span class="line">	clientset, err :&#x3D; kubernetes.NewForConfig(cfg)</span><br><span class="line"></span><br><span class="line">	if err !&#x3D; nil &#123;</span><br><span class="line">		panic(err)</span><br><span class="line">	&#125;</span><br><span class="line">    &#x2F;&#x2F;创建&#96;stopCh&#96;对象用于在程序进程退出之前通知&#96;Informer&#96;提前退出，这是因为&#96;Informer&#96;是一个持久运行的&#96;goroutine&#96;。</span><br><span class="line">	stopCh :&#x3D; make(chan struct&#123;&#125;)</span><br><span class="line"></span><br><span class="line">	defer close(stopCh)</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 实例化&#96;SharedInformer&#96;对象@NewSharedInformerFactory</span><br><span class="line">	sharedInformers :&#x3D; informers.NewSharedInformerFactory(clientset, time.Minute)</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 示例主要针对的是&#96;Pod&#96;资源的&#96;Informer&#96;对象。通过实现回调函数来实现具体的逻辑，这里主要是作为演示使用@Informer</span><br><span class="line">	informer :&#x3D; sharedInformers.Core().V1().Pods().Informer()</span><br><span class="line"></span><br><span class="line">	&#x2F;&#x2F; 添加informer事件回调函数的逻辑，这里只做演示</span><br><span class="line">	informer.AddEventHandler(cache.ResourceEventHandlerFuncs&#123;</span><br><span class="line">		AddFunc: func(obj interface&#123;&#125;) &#123;</span><br><span class="line">			mObj :&#x3D; obj.(v1.Object)</span><br><span class="line">			log.Printf(&quot;New Pod Added to Store: %s&quot;, mObj.GetName())</span><br><span class="line">		&#125;,</span><br><span class="line">		UpdateFunc: func(oldObj, newObj interface&#123;&#125;) &#123;</span><br><span class="line">			oObj :&#x3D; oldObj.(v1.Object)</span><br><span class="line">			nObj :&#x3D; newObj.(v1.Object)</span><br><span class="line">			log.Printf(&quot;%s Pod updated to %s&quot;, oObj.GetName(), nObj.GetName())</span><br><span class="line">		&#125;,</span><br><span class="line">		DeleteFunc: func(obj interface&#123;&#125;) &#123;</span><br><span class="line">			mObj :&#x3D; obj.(v1.Object)</span><br><span class="line">			log.Printf(&quot;Pod Deleted from Store; %s&quot;, mObj.GetName())</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;)</span><br><span class="line">	&#x2F;&#x2F; @Run</span><br><span class="line">	informer.Run(stopCh)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>成功运行之后我们会看到如下日志输出：<br><img src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpj6ijmomxj20qa06habj.jpg" alt="日志"></p>
+<h1 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h1><h2 id="NewSharedInformerFactory"><a href="#NewSharedInformerFactory" class="headerlink" title="NewSharedInformerFactory"></a><code>NewSharedInformerFactory</code></h2><blockquote>
+<p><code>informers/factory.go</code></p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 构建 sharedInformerFactory 实例</span><br><span class="line">func NewSharedInformerFactory(client kubernetes.Interface, defaultResync time.Duration) SharedInformerFactory &#123;</span><br><span class="line">	return NewSharedInformerFactoryWithOptions(client, defaultResync)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 根据额外的 options 构造 SharedInformerFactory 实例</span><br><span class="line">func NewSharedInformerFactoryWithOptions(client kubernetes.Interface, defaultResync time.Duration, options ...SharedInformerOption) SharedInformerFactory &#123;</span><br><span class="line">	&#x2F;&#x2F; 初始化sharedInformerFactory @sharedInformerFactory</span><br><span class="line">	factory :&#x3D; &amp;sharedInformerFactory&#123;</span><br><span class="line">		client:           client,</span><br><span class="line">		namespace:        v1.NamespaceAll,</span><br><span class="line">		defaultResync:    defaultResync,</span><br><span class="line">		&#x2F;&#x2F;@informers 初始化informers</span><br><span class="line">		informers:        make(map[reflect.Type]cache.SharedIndexInformer),</span><br><span class="line">		startedInformers: make(map[reflect.Type]bool),</span><br><span class="line">		customResync:     make(map[reflect.Type]time.Duration),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&#x2F;&#x2F; Apply all options</span><br><span class="line">	for _, opt :&#x3D; range options &#123;</span><br><span class="line">		factory &#x3D; opt(factory)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	return factory</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>@Informers</code><blockquote>
+<p><code>tools/cache/shared_informers.go</code></p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 在原有的 SharedInder 基础上扩展了 Index 的能力</span><br><span class="line">type SharedIndexInformer interface &#123;</span><br><span class="line">	&#x2F;&#x2F;@SharedInformer</span><br><span class="line">	SharedInformer</span><br><span class="line">	&#x2F;&#x2F; AddIndexers add indexers to the informer before it starts.</span><br><span class="line">	AddIndexers(indexers Indexers) error</span><br><span class="line">	GetIndexer() Indexer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><code>@SharedInformer</code><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">type SharedInformer interface &#123;</span><br><span class="line">	&#x2F;&#x2F; 在 shared informer中添加时间处理器，虽然事件是顺序性的传递给处理器，但是在不同的事件处理中并没有依赖关系 @AddEventHandler</span><br><span class="line">	AddEventHandler(handler ResourceEventHandler)</span><br><span class="line">&#x2F;&#x2F; 在 resync 期间添加事件处理器，在 resync为0阶段，意味着该事件处理器并不关心 resyncs。resync操作包含对 informer本地缓存中的每个对象的handler一个更新的通知。即使在非0阶段，一些informer压根不做resync，#TODO</span><br><span class="line">	AddEventHandlerWithResyncPeriod(handler ResourceEventHandler, resyncPeriod time.Duration)</span><br><span class="line">	&#x2F;&#x2F; GetStore 将 informer 的本地缓存作为存储返回</span><br><span class="line">	GetStore() Store</span><br><span class="line">	&#x2F;&#x2F; GetController 已经废除，不再使用</span><br><span class="line">	GetController() Controller</span><br><span class="line">	&#x2F;&#x2F; Run 启动并运行 shared informer</span><br><span class="line">	&#x2F;&#x2F; The informer will be stopped when stopCh is closed.</span><br><span class="line">	Run(stopCh &lt;-chan struct&#123;&#125;)</span><br><span class="line">	&#x2F;&#x2F; 当 shared informer发生至少一次全量的通知之后将返回true</span><br><span class="line">	HasSynced() bool</span><br><span class="line">	&#x2F;&#x2F; LastSyncResourceVersion 对此操作非线程安全</span><br><span class="line">	LastSyncResourceVersion() string</span><br><span class="line"></span><br><span class="line">	&#x2F;&#x2F; 当 ListAndWatch 发生异常则触发此handler处理</span><br><span class="line">	SetWatchErrorHandler(handler WatchErrorHandler) error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><code>@sharedInformerFactory</code><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">type sharedInformerFactory struct &#123;</span><br><span class="line">	client           kubernetes.Interface</span><br><span class="line">	namespace        string</span><br><span class="line">	tweakListOptions internalinterfaces.TweakListOptionsFunc</span><br><span class="line">	lock             sync.Mutex</span><br><span class="line">	defaultResync    time.Duration</span><br><span class="line">	customResync     map[reflect.Type]time.Duration</span><br><span class="line">	&#x2F;&#x2F; 存放于map中做初始化</span><br><span class="line">	informers map[reflect.Type]cache.SharedIndexInformer</span><br><span class="line">	&#x2F;&#x2F; startedInformers is used for tracking which informers have been started.</span><br><span class="line">	&#x2F;&#x2F; This allows Start() to be called multiple times safely.</span><br><span class="line">	startedInformers map[reflect.Type]bool</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Informer"><a href="#Informer" class="headerlink" title="@Informer"></a><code>@Informer</code></h2><blockquote>
+<p><code>informers/core/v1/pod.go</code><br>此示例代码为 <code>PodInformer</code><br>每个<code>kubernetes</code>资源上都实现了<code>Informer</code>机制，都实现了<code>Informer()</code>和<code>Lister()</code>方法，</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; PodInformer provides access to a shared informer and lister for</span><br><span class="line">&#x2F;&#x2F; Pods.</span><br><span class="line">type PodInformer interface &#123;</span><br><span class="line">	&#x2F;&#x2F; 具体还是为 SharedIndexInformer</span><br><span class="line">	Informer() cache.SharedIndexInformer</span><br><span class="line">	Lister() v1.PodLister</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以看下其他资源实际上都实现了此两种方法：<br><img src="http://tva3.sinaimg.cn/wap800/7a56748fly1gpj8joxk2hj20wn0epgpf.jpg" alt="informer-defition"><br>调用不同的资源<code>informer</code>就如示例中代码一样<code>informer := sharedInformers.Core().V1().Pods().Informer()</code>定义不同资源的<code>Informer</code>允许监控不同资源的资源事件，然后通过实现回调函数执行对应的具体逻辑。</p>
+<p><code>PodInformer.Informer()</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">func (f *podInformer) Informer() cache.SharedIndexInformer &#123;</span><br><span class="line">	&#x2F;&#x2F;@InformerFor</span><br><span class="line">	return f.factory.InformerFor(&amp;corev1.Pod&#123;&#125;, f.defaultInformer)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>@InformerFor</code><blockquote>
+<p><code>informers/factory.go</code></p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; InternalInformerFor returns the SharedIndexInformer for obj using an internal</span><br><span class="line">&#x2F;&#x2F; client.</span><br><span class="line">func (f *sharedInformerFactory) InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer &#123;</span><br><span class="line">	f.lock.Lock()</span><br><span class="line">	defer f.lock.Unlock()</span><br><span class="line"></span><br><span class="line">	informerType :&#x3D; reflect.TypeOf(obj)</span><br><span class="line">	informer, exists :&#x3D; f.informers[informerType]</span><br><span class="line">	if exists &#123;</span><br><span class="line">		return informer</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	resyncPeriod, exists :&#x3D; f.customResync[informerType]</span><br><span class="line">	if !exists &#123;</span><br><span class="line">		resyncPeriod &#x3D; f.defaultResync</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	informer &#x3D; newFunc(f.client, resyncPeriod)</span><br><span class="line">	f.informers[informerType] &#x3D; informer</span><br><span class="line"></span><br><span class="line">	return informer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+这里可以看到最终完成了对于<code>informer</code>的创建，并且注册到了<code>Struct object</code>中，完成了对自己的<code>Informer</code>的注册。</li>
+</ul>
+<!-- **至此我们实际上并没有看到注册那些对感兴趣的事件的注册。此处我们先跳过继续往下分析** -->
+<!-- *由于我的示例代码中没有做 `sharedInformers.Start(stopCh)` 这步，这里我们可以顺带看下 `Start`背后的逻辑*
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Start initializes all requested informers.</span><br><span class="line">func (f *sharedInformerFactory) Start(stopCh &lt;-chan struct&#123;&#125;) &#123;</span><br><span class="line">	f.lock.Lock()</span><br><span class="line">	defer f.lock.Unlock()</span><br><span class="line"></span><br><span class="line">	for informerType, informer :&#x3D; range f.informers &#123;</span><br><span class="line">		if !f.startedInformers[informerType] &#123;</span><br><span class="line">			go informer.Run(stopCh)</span><br><span class="line">			f.startedInformers[informerType] &#x3D; true</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#96;&#96;&#96; --&gt;</span><br><span class="line">## &#96;@Run&#96;</span><br><span class="line">&gt;&#96;client-go&#x2F;tools&#x2F;cache&#x2F;shared_informer.go&#96;</span><br></pre></td></tr></table></figure>
+<p>func (s *sharedIndexInformer) Run(stopCh &lt;-chan struct{}) {<br>    //只是捕获 crash 及 记录 error 日志<br>    defer utilruntime.HandleCrash()</p>
+<pre><code>//构造 DeltaFIFOOptions,然后它根据得到的 key 拆分函数和Store index 创建一个FIFO队列，这个队列是一个先进先出的队列，主要用来保存对象的各种事件。@NeDletaFIFOWithOptions
+fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions&#123;
+    KnownObjects:          s.indexer,
+    EmitDeltaTypeReplaced: true,
+&#125;)
+
+// 构造 Config
+cfg := &amp;Config&#123;
+    Queue:            fifo,
+    ListerWatcher:    s.listerWatcher,
+    ObjectType:       s.objectType,
+    FullResyncPeriod: s.resyncCheckPeriod,
+    RetryOnError:     false,
+    ShouldResync:     s.processor.shouldResync,
+
+// @HandleDeltas,通过 Process 处理Deltas 记录的事件
+    Process:           s.HandleDeltas,
+    WatchErrorHandler: s.watchErrorHandler,
+&#125;
+
+func() &#123;
+    s.startedLock.Lock()
+    defer s.startedLock.Unlock()
+    // 通过 cfg 来创建 controller
+    // @controller
+    s.controller = New(cfg)
+    s.controller.(*controller).clock = s.clock
+    s.started = true
+&#125;()
+
+// Separate stop channel because Processor should be stopped strictly after controller
+processorStopCh := make(chan struct&#123;&#125;)
+var wg wait.Group
+defer wg.Wait()              // Wait for Processor to stop
+defer close(processorStopCh) // Tell Processor to stop
+wg.StartWithChannel(processorStopCh, s.cacheMutationDetector.Run)
+//@s.processor.run 这边才是真正的Listering调用
+wg.StartWithChannel(processorStopCh, s.processor.run)
+
+defer func() &#123;
+    s.startedLock.Lock()
+    defer s.startedLock.Unlock()
+    s.stopped = true // Don&#39;t want any new listeners
+&#125;()
+// controller Run
+s.controller.Run(stopCh)
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@NewDletaFIFOWithOptions&#96;实际的调用我们需要重点关注下，因为这边是存储各种资源对象的关键地方，存储在&#96;DeltaFIFO&#96;的队列中.</span><br><span class="line">&gt;&#96;tools&#x2F;cache&#x2F;delta_fifo.go&#96;</span><br></pre></td></tr></table></figure>
+<p>// 返回一个处理其中元素的队列<br>func NewDeltaFIFOWithOptions(opts DeltaFIFOOptions) *DeltaFIFO {<br>    if opts.KeyFunction == nil {<br>        opts.KeyFunction = MetaNamespaceKeyFunc<br>    }<br>    //@DeltaFIFO<br>    f := &amp;DeltaFIFO{<br>        // @Deltas 就是用 map 来存放数据<br>        items:        map[string]Deltas{},<br>        queue:        []string{},<br>        keyFunc:      opts.KeyFunction,<br>        knownObjects: opts.KnownObjects,</p>
+<pre><code>    emitDeltaTypeReplaced: opts.EmitDeltaTypeReplaced,
+&#125;
+f.cond.L = &amp;f.lock
+return f
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@DeltaFIFO&#96; </span><br><span class="line">对于DeltaFIFO的描述在文档上描述很是详细，关键点翻译如下：</span><br><span class="line">&gt; DeltaFIFO 类似 FIFO，但是在两方面存在不同。第一点是其中的&#96;key&#96;不是对象而是&#96;Deltas&#96;，实际上该对象的&#96;Delta&#96;组成的切片，第二点是&#96;DeltaFIFO&#96;增加了额外的两个方法：&#96;Replaced&#96;和&#96;Sync&#96;</span><br><span class="line">&gt;&#96;DeltaFIFO&#96; 是个生产消费者模式的队列，其中&#96;Reflector&#96;作为生产者，而消费者是哪些调用了&#96;Pop()&#96;方法的使用者。</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>type DeltaFIFO struct {<br>    lock sync.RWMutex<br>    cond sync.Cond<br>    items map[string]Deltas<br>    queue []string<br>    populated bool<br>    initialPopulationCount int<br>    keyFunc KeyFunc<br>    knownObjects KeyListerGetter<br>    closed bool<br>    emitDeltaTypeReplaced bool<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@Deltas&#96;</span><br></pre></td></tr></table></figure>
+<p>type Deltas []Delta</p>
+<p>type Delta struct{<br>    Type    DletaType<br>    Object interface{}<br>}</p>
+<p>type DletaType string</p>
+<p>const {<br>    Added   DeltaType = “Added”<br>    Updated DeltaType = “Updated”<br>    Deleted DeltaType = “Deleted”<br>    Replaced DeltaType = “Replaced”<br>    Sync DeltaType = “Sync”<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@HandleDeltas&#96;</span><br><span class="line">&gt;&#96;tools&#x2F;cache&#x2F;shared_informer.go&#96;</span><br></pre></td></tr></table></figure>
+<p>func (s *sharedIndexInformer) HandleDeltas(obj interface{}) error {<br>    s.blockDeltas.Lock()<br>    defer s.blockDeltas.Unlock()</p>
+<pre><code>// 遍历处理
+for _, d := range obj.(Deltas) &#123;
+    switch d.Type &#123;
+    case Sync, Replaced, Added, Updated:
+        s.cacheMutationDetector.AddObject(d.Object)
+        if old, exists, err := s.indexer.Get(d.Object); err == nil &amp;&amp; exists &#123;
+            if err := s.indexer.Update(d.Object); err != nil &#123;
+                return err
+            &#125;
+
+            isSync := false
+            switch &#123;
+            case d.Type == Sync:
+                // Sync events are only propagated to listeners that requested resync
+                isSync = true
+            case d.Type == Replaced:
+                if accessor, err := meta.Accessor(d.Object); err == nil &#123;
+                    if oldAccessor, err := meta.Accessor(old); err == nil &#123;
+                        // Replaced events that didn&#39;t change resourceVersion are treated as resync events
+                        // and only propagated to listeners that requested resync
+                        isSync = accessor.GetResourceVersion() == oldAccessor.GetResourceVersion()
+                    &#125;
+                &#125;
+            &#125;
+            //@distribute
+            s.processor.distribute(updateNotification&#123;oldObj: old, newObj: d.Object&#125;, isSync)
+        &#125; else &#123;
+            if err := s.indexer.Add(d.Object); err != nil &#123;
+                return err
+            &#125;
+            s.processor.distribute(addNotification&#123;newObj: d.Object&#125;, false)
+        &#125;
+    case Deleted:
+        if err := s.indexer.Delete(d.Object); err != nil &#123;
+            return err
+        &#125;
+        s.processor.distribute(deleteNotification&#123;oldObj: d.Object&#125;, false)
+    &#125;
+&#125;
+return nil
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@distribute&#96;</span><br><span class="line">&gt;&#96;tools&#x2F;cache&#x2F;shared_informers.go&#96;</span><br></pre></td></tr></table></figure>
+<p>func (p *sharedProcessor) distribute(obj interface{}, sync bool) {<br>    p.listenersLock.RLock()<br>    defer p.listenersLock.RUnlock()</p>
+<pre><code>if sync &#123;
+    for _, listener := range p.syncingListeners &#123;
+        listener.add(obj)
+    &#125;
+&#125; else &#123;
+    // 这里我们挑选一个简单的追踪跟进@p.listeners
+    for _, listener := range p.listeners &#123;
+        listener.add(obj)
+    &#125;
+&#125;
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@listeners&#96;</span><br></pre></td></tr></table></figure>
+<p>// sharedProcessor 属性包含 processorListener 的集合，另外能够发布消息通知对象到对应的listeners<br>type sharedProcessor struct {<br>    listenersStarted bool<br>    listenersLock    sync.RWMutex<br>    // @processorListener<br>    listeners        []*processorListener<br>    syncingListeners []*processorListener<br>    clock            clock.Clock<br>    wg               wait.Group<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- &#96;@processorListener&#96;</span><br></pre></td></tr></table></figure>
+<p>// processorListener 将 sharedProcessor转发到 ResourceEventHandler。实现方式是使用两个 goroutines，两个不带缓冲的 channel 以及 ring buffer<br>type processorListener struct {<br>    nextCh chan interface{}<br>    addCh  chan interface{}<br>    handler ResourceEventHandler<br>    pendingNotifications buffer.RingGrowing<br>    requestedResyncPeriod time.Duration<br>    resyncPeriod time.Duration<br>    nextResync time.Time<br>    resyncLock sync.Mutex<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- @controller 这个 &#96;controller&#96; 就是 &#96;client-go&#96; 中的 &#96;Cache controller&#96;，主要用来控制从&#96;APIServer&#96; 获取的对象的&#96;cache&#96;以及更新对象</span><br></pre></td></tr></table></figure>
+<p>type Controller interface {<br>    // Run 主要处理两件事情，第一个作用主要用来构造并将Config对象中ListerWatcher获取的对象/通知传递到Config对象的Queue中，另一个作用则为重复的从Queue中Pop对象让Config中的ProcessFunc处理<br>    Run(stopCh &lt;-chan struct{})</p>
+<pre><code>HasSynced() bool
+
+LastSyncResourceVersion() string
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- @s.processor.run</span><br></pre></td></tr></table></figure>
+<p>func (p *sharedProcessor) run(stopCh &lt;-chan struct{}) {<br>    func() {<br>        p.listenersLock.RLock()<br>        defer p.listenersLock.RUnlock()<br>        // 注意前面@Informer的使用<br>        for _, listener := range p.listeners {<br>            p.wg.Start(listener.run)<br>            p.wg.Start(listener.pop)<br>        }<br>        p.listenersStarted = true<br>    }()<br>    &lt;-stopCh<br>    p.listenersLock.RLock()<br>    defer p.listenersLock.RUnlock()<br>    for _, listener := range p.listeners {<br>        close(listener.addCh) // Tell .pop() to stop. .pop() will tell .run() to stop<br>    }<br>    p.wg.Wait() // Wait for all .pop() and .run() to stop<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">最终是 &#96;controller.Run(stopCh)&#96;的执行。继续往下看 &#96;client-go&#x2F;tools&#x2F;cache&#x2F;controller.go&#96; 中 &#96;Run&#96;方法：</span><br></pre></td></tr></table></figure>
+<p>// controller 就是比较底层的具体实现了<br>func (c *controller) Run(stopCh &lt;-chan struct{}) {<br>    defer utilruntime.HandleCrash()<br>    go func() {<br>        &lt;-stopCh<br>        c.config.Queue.Close()<br>    }()<br>    r := NewReflector(<br>        c.config.ListerWatcher,<br>        c.config.ObjectType,<br>        c.config.Queue,<br>        c.config.FullResyncPeriod,<br>    )<br>    r.ShouldResync = c.config.ShouldResync<br>    r.WatchListPageSize = c.config.WatchListPageSize<br>    r.clock = c.clock<br>    if c.config.WatchErrorHandler != nil {<br>        r.watchErrorHandler = c.config.WatchErrorHandler<br>    }</p>
+<pre><code>c.reflectorMutex.Lock()
+c.reflector = r
+c.reflectorMutex.Unlock()
+
+var wg wait.Group
+// 注意这边的 r.Run 运行@r.Run
+wg.StartWithChannel(stopCh, r.Run)
+// 进行队列操作 @c.processLoop
+wait.Until(c.processLoop, time.Second, stopCh)
+wg.Wait()
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">至此整个的&#96;Run&#96;算是真正的启动了。</span><br><span class="line">- @r.Run</span><br></pre></td></tr></table></figure>
+<p>// Run 方法将重复的使用ListAndWatch获取所有的对象。<br>func (r *Reflector) Run(stopCh &lt;-chan struct{}) {<br>    klog.V(2).Infof(“Starting reflector %s (%s) from %s”, r.expectedTypeName, r.resyncPeriod, r.name)<br>    wait.BackoffUntil(func() {<br>        if err := r.ListAndWatch(stopCh); err != nil {<br>            r.watchErrorHandler(r, err)<br>        }<br>    }, r.backoffManager, true, stopCh)<br>    klog.V(2).Infof(“Stopping reflector %s (%s) from %s”, r.expectedTypeName, r.resyncPeriod, r.name)<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- @c.processLoop</span><br></pre></td></tr></table></figure>
+<p>func (c *controller) processLoop() {<br>    for {<br>        // 队列POP操作，Pop 操作会原子性的将其中一个key获取出来，同时移除其在Store中的存储。<br>        obj, err := c.config.Queue.Pop(PopProcessFunc(c.config.Process))<br>        if err != nil {<br>            if err == ErrFIFOClosed {<br>                return<br>            }<br>            if c.config.RetryOnError {<br>                // This is the safe way to re-enqueue.<br>                c.config.Queue.AddIfNotPresent(obj)<br>            }<br>    }<br>    }<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## 流程梳理</span><br><span class="line">![流程梳理](http:&#x2F;&#x2F;tva3.sinaimg.cn&#x2F;wap800&#x2F;7a56748fly1gpj8akl1i2j20zy0ks0ud.jpg)</span><br><span class="line"></span><br><span class="line">通过以上代码追根溯源我们会注意到如下概念：</span><br><span class="line">- &#96;Informer&#96;</span><br><span class="line">	- &#96;Shared Informer&#96;</span><br><span class="line">- &#96;Reflector&#96;</span><br><span class="line">- &#96;DeltaFIFO&#96;</span><br><span class="line">- &#96;Indexer&#96;</span><br><span class="line">下面对以上概念进一步的具体分析。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## &#96;Shared Informer&#96;共享机制</span><br><span class="line">通过&#96;Informer&#96; 内部的定义可以知道，实际上这边是&#96;cache.SharedIndexInformer&#96;，根据命名我们可以知道这是可共享的，即可以使用同一类资源&#96;Informer&#96;共享一个&#96;Reflector&#96;，来节省资源.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>type sharedInformerFactory struct {<br>    client           kubernetes.Interface<br>    namespace        string<br>    tweakListOptions internalinterfaces.TweakListOptionsFunc<br>    lock             sync.Mutex<br>    defaultResync    time.Duration<br>    customResync     map[reflect.Type]time.Duration<br>    //通过 map 来建立共享 informer 缓存<br>    informers map[reflect.Type]cache.SharedIndexInformer<br>    // startedInformers is used for tracking which informers have been started.<br>    // This allows Start() to be called multiple times safely.<br>    startedInformers map[reflect.Type]bool<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">继续看</span><br></pre></td></tr></table></figure>
+<p>type podInformer struct {<br>    factory          internalinterfaces.SharedInformerFactory<br>    tweakListOptions internalinterfaces.TweakListOptionsFunc<br>    namespace        string<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">中的 &#96;factory&#96;的定义.</span><br></pre></td></tr></table></figure>
+<p>// SharedInformerFactory a small interface to allow for adding an informer without an import cycle<br>type SharedInformerFactory interface {<br>    Start(stopCh &lt;-chan struct{})<br>    InformerFor(obj runtime.Object, newFunc NewInformerFunc) cache.SharedIndexInformer<br>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">其中 &#96;InformerFor&#96; 方法在 &#96;factory&#96; 中具体实现如下：</span><br></pre></td></tr></table></figure>
+<p>// InformerFor 函数添加了不同资源的Informer，在添加过程中如果已经存在同类型的资源Informer，则返回当前Informer，不在继续添加<br>func (f *sharedInformerFactory) InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer {<br>    f.lock.Lock()<br>    defer f.lock.Unlock()</p>
+<pre><code>informerType := reflect.TypeOf(obj)
+informer, exists := f.informers[informerType]
+if exists &#123;
+    return informer
+&#125;
+
+resyncPeriod, exists := f.customResync[informerType]
+if !exists &#123;
+    resyncPeriod = f.defaultResync
+&#125;
+
+informer = newFunc(f.client, resyncPeriod)
+f.informers[informerType] = informer
+
+return informer
+</code></pre>
+<p>}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"># &#96;Reflector&#96;</span><br><span class="line">通过源码查看下&#96;Reflector&#96;具体的定义</span><br></pre></td></tr></table></figure>
+<p>// Reflector 监控指定的资源，并将变化映射到给出的存储中<br>type Reflector struct {<br>    name string<br>    expectedTypeName string<br>    expectedType reflect.Type<br>    expectedGVK *schema.GroupVersionKind<br>    store Store<br>    listerWatcher ListerWatcher<br>    backoffManager wait.BackoffManager<br>    initConnBackoffManager wait.BackoffManager</p>
+<pre><code>resyncPeriod time.Duration
+ShouldResync func() bool
+clock clock.Clock
+paginatedResult bool
+lastSyncResourceVersion string
+isLastSyncResourceVersionUnavailable bool
+lastSyncResourceVersionMutex sync.RWMutex
+WatchListPageSize int64
+watchErrorHandler WatchErrorHandler
+</code></pre>
+<p>}</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">kirago</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/">http://kiragoo.github.com/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kiragoo.github.com" target="_blank">kirago杂谈</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/kubernetes/">kubernetes</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a><a class="post-meta__tags" href="/tags/Informer/">Informer</a></div><div class="post_share"><div class="social-share" data-image="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2021/04/12/LeetCode%E4%B9%8B%E6%9C%80%E5%A4%A7%E6%95%B0/"><img class="next-cover" src="http://tva3.sinaimg.cn/wap800/7a56748fgy1gphahet6udj210g0yon05.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">LeetCode之最大数</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span> 相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2021/04/12/kubernetes源码分析系列之kube-scheduler-1/" title="kubernetes源码分析系列之kube-scheduler-1"><img class="cover" src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-04-12</div><div class="title">kubernetes源码分析系列之kube-scheduler-1</div></div></a></div><div><a href="/2021/04/12/kubernetes源码分析系列之kube-scheduler-2/" title="kubernetes源码分析系列之kube-scheduler-2"><img class="cover" src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-04-12</div><div class="title">kubernetes源码分析系列之kube-scheduler-2</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-info-avatar is-center"><img class="avatar-img" src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-info__name">kirago</div><div class="author-info__description">勿以浮沙筑高台</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a></div><div class="card-info-data-item is-center"><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kiragoo" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:zhangl910201@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">kirago杂谈小屋</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Demo%E5%85%A5%E5%8F%A3"><span class="toc-number">1.</span> <span class="toc-text">Demo入口</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">2.</span> <span class="toc-text">代码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#NewSharedInformerFactory"><span class="toc-number">2.1.</span> <span class="toc-text">NewSharedInformerFactory</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Informer"><span class="toc-number">2.2.</span> <span class="toc-text">@Informer</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/" title="kubernetes源码分析系列之Informer机制初探-1"><img src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubernetes源码分析系列之Informer机制初探-1"/></a><div class="content"><a class="title" href="/2021/04/14/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8BInformer%E6%9C%BA%E5%88%B6%E5%88%9D%E6%8E%A2-1/" title="kubernetes源码分析系列之Informer机制初探-1">kubernetes源码分析系列之Informer机制初探-1</a><time datetime="2021-04-14T03:41:49.000Z" title="发表于 2021-04-14 11:41:49">2021-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/04/12/LeetCode%E4%B9%8B%E6%9C%80%E5%A4%A7%E6%95%B0/" title="LeetCode之最大数"><img src="http://tva3.sinaimg.cn/wap800/7a56748fgy1gphahet6udj210g0yon05.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="LeetCode之最大数"/></a><div class="content"><a class="title" href="/2021/04/12/LeetCode%E4%B9%8B%E6%9C%80%E5%A4%A7%E6%95%B0/" title="LeetCode之最大数">LeetCode之最大数</a><time datetime="2021-04-12T13:35:49.000Z" title="发表于 2021-04-12 21:35:49">2021-04-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/04/12/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8Bkube-scheduler-2/" title="kubernetes源码分析系列之kube-scheduler-2"><img src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubernetes源码分析系列之kube-scheduler-2"/></a><div class="content"><a class="title" href="/2021/04/12/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8Bkube-scheduler-2/" title="kubernetes源码分析系列之kube-scheduler-2">kubernetes源码分析系列之kube-scheduler-2</a><time datetime="2021-04-12T08:50:48.000Z" title="发表于 2021-04-12 16:50:48">2021-04-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/04/12/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8Bkube-scheduler-1/" title="kubernetes源码分析系列之kube-scheduler-1"><img src="http://tvax4.sinaimg.cn/wap800/7a56748fly1gpgxoc1i2aj22kc1e2tl9.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubernetes源码分析系列之kube-scheduler-1"/></a><div class="content"><a class="title" href="/2021/04/12/kubernetes%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B9%8Bkube-scheduler-1/" title="kubernetes源码分析系列之kube-scheduler-1">kubernetes源码分析系列之kube-scheduler-1</a><time datetime="2021-04-12T06:12:00.000Z" title="发表于 2021-04-12 14:12:00">2021-04-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/04/11/7%E5%A4%A9%E7%94%A8go%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E7%B3%BB%E5%88%97%E4%B9%8Bweb%E6%A1%86%E6%9E%B6Day1/" title="7天用go从零实现系列之web框架Day1"><img src="http://tva3.sinaimg.cn/wap800/7a56748fgy1gpg7q2ta7dj22l01du7wi.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="7天用go从零实现系列之web框架Day1"/></a><div class="content"><a class="title" href="/2021/04/11/7%E5%A4%A9%E7%94%A8go%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0%E7%B3%BB%E5%88%97%E4%B9%8Bweb%E6%A1%86%E6%9E%B6Day1/" title="7天用go从零实现系列之web框架Day1">7天用go从零实现系列之web框架Day1</a><time datetime="2021-04-11T14:27:26.000Z" title="发表于 2021-04-11 22:27:26">2021-04-11</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By kirago</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
