@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2021-04-15T15:29:48.822Z</updated>
+  <updated>2021-04-15T16:23:56.774Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>git无法添加空的文件夹</title>
+    <link href="http://kiragoo.github.com/2021/04/15/git%E6%97%A0%E6%B3%95%E6%B7%BB%E5%8A%A0%E7%A9%BA%E7%9A%84%E6%96%87%E4%BB%B6%E5%A4%B9/"/>
+    <id>http://kiragoo.github.com/2021/04/15/git%E6%97%A0%E6%B3%95%E6%B7%BB%E5%8A%A0%E7%A9%BA%E7%9A%84%E6%96%87%E4%BB%B6%E5%A4%B9/</id>
+    <published>2021-04-15T15:55:07.000Z</published>
+    <updated>2021-04-15T16:23:56.774Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近打算用<code>gitee</code>和<code>PigGO</code>结合起来做个私有的图床，因为之前一直用的微博的插件去上传图片到图床然后引用<code>URL</code>，但是始终感觉毕竟不是自己可控的那天说不定没用了，那么我的图片就都没了，本来考虑用<code>github</code>来托管我的图片的，但是考虑到“墙”的问题 ，国内访问会抽风，所以就打算用<code>gitee</code>和<code>PigGO</code>来构建自己私有的图床了，那么也就引发了此次的问题。</p><hr><p><strong>新克隆的<code>git</code>仓库无法添加空文件目录</strong>，这里出现空的文件目录是因为我想在图床仓库中建多个<code>path</code>，这个<code>path</code>中的内容专门给我的博客使用，其他的<code>path</code>后续再看情况使用。</p><h1 id="诡异的问题"><a href="#诡异的问题" class="headerlink" title="诡异的问题"></a>诡异的问题</h1><p><code>git add dir-xx</code> 之后缓存区没有任何内容 ，而且也没有任何异常报错，老实说这是最懵的状态，无从下手，最后还是借助强大的搜索解决.<br><img src="https://gitee.com/Tony_zhangl/kimg/raw/master/blogimgs/20210416002304.png" alt="描述"><br><a href="https://git.wiki.kernel.org/index.php/GitFaq#Can_I_add_empty_directories.3F">Can I add empty directories?</a></p><p>好吧，那我就在我的新建的文件夹中加个<code>.gitkeep</code>文件吧，至此问题解决。</p>]]></content>
+    
+    
+    <summary type="html">克隆后的仓库中添加空目录无效</summary>
+    
+    
+    
+    <category term="工具" scheme="http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/"/>
+    
+    <category term="git" scheme="http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/git/"/>
+    
+    
+    <category term="git" scheme="http://kiragoo.github.com/tags/git/"/>
+    
+  </entry>
   
   <entry>
     <title>本地配置多个git-ssh公钥</title>
