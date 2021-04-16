@@ -88,7 +88,7 @@
 
   <url>
     <loc>http://kiragoo.github.com/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -96,77 +96,77 @@
   
   <url>
     <loc>http://kiragoo.github.com/tags/golang/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/leetcode/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/java/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/k8s/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/kubeadm/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/kubernetes/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/kube-scheduler/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/Informer/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/tags/git/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -175,77 +175,77 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/golang/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/k8s/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/kube-scheduler/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/leetcode/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/Informer/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/Informer/client-go/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/git/</loc>
-    <lastmod>2021-04-15</lastmod>
+    <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
