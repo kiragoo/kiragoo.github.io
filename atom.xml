@@ -112,13 +112,13 @@
     <category term="leetcode" scheme="http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/leetcode/"/>
     
     
-    <category term="golang" scheme="http://kiragoo.github.com/tags/golang/"/>
-    
     <category term="算法" scheme="http://kiragoo.github.com/tags/%E7%AE%97%E6%B3%95/"/>
     
     <category term="leetcode" scheme="http://kiragoo.github.com/tags/leetcode/"/>
     
     <category term="java" scheme="http://kiragoo.github.com/tags/java/"/>
+    
+    <category term="golang" scheme="http://kiragoo.github.com/tags/golang/"/>
     
   </entry>
   
