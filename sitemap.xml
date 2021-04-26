@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://kiragoo.github.com/archives/3eaa0b02.html</loc>
+    
+    <lastmod>2021-04-16</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/archives/3959e77d.html</loc>
     
     <lastmod>2021-04-16</lastmod>
@@ -171,6 +178,20 @@
     <priority>0.6</priority>
   </url>
   
+  <url>
+    <loc>http://kiragoo.github.com/tags/%E8%B0%83%E5%BA%A6/</loc>
+    <lastmod>2021-04-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/Gang-scheduling/</loc>
+    <lastmod>2021-04-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
 
   
   <url>
@@ -245,6 +266,27 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/Informer/client-go/</loc>
+    <lastmod>2021-04-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/</loc>
+    <lastmod>2021-04-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/</loc>
+    <lastmod>2021-04-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/%E7%BF%BB%E8%AF%91/</loc>
     <lastmod>2021-04-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>

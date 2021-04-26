@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2021-04-16T04:47:07.198Z</updated>
+  <updated>2021-04-16T07:42:20.765Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -15,6 +15,37 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>kubernetes之Gang scheduling</title>
+    <link href="http://kiragoo.github.com/archives/3eaa0b02.html"/>
+    <id>http://kiragoo.github.com/archives/3eaa0b02.html</id>
+    <published>2021-04-16T06:21:11.000Z</published>
+    <updated>2021-04-16T07:42:20.765Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>此篇为<a href="https://docs.google.com/document/d/1AUwcvTtULNvow5M9e428FnlvINO1uQ7ojRoTGuTp4DA">《Gang scheduling in Kubernetes》</a>文档翻译，<strong>个人翻译</strong>。</p></blockquote><h1 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h1><p><code>Kubernetes</code>目前已经成为主流的容器平台编排方案，在服务与存储层面已经取得成功性的大规模应用了，并且原生<code>k8s</code>支持<code>Spark</code>。同时社区也在致力进行将<code>ML</code>机器学习框架运行在<code>k8s</code>之上，比如<a href="https://github.com/kubeflow/tf-operator">kubeflow/tf-operator</a>,在整合<a href="https://github.com/kubernetes-incubator/kube-arbitrator"><code>kube-arbitrator</code></a>期间，我们发现以下需求合并到<code>default-scheduling</code>是更好的措施。</p><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p><del><code>Gang Scheduling</code>:任务实例要么全部或全部不执行。如果没有足够的资源来调度所有的<code>pod</code>，那么改任务包含的<code>pod</code>一个都不被调度，即<code>All-or-none</code>模式。如果任务中有任何的<code>pod</code>运行失败或未被调度，那么所有的<code>pod</code>必须能够优雅的终止退出</del></p><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ol><li>以<code>pod group</code>的方式调度<code>pod</code>，<code>all-or-nothing</code>模式(<code>TensorFlow</code>,<code>MPI</code>)<br>最初的需求来自于<code>TesnsorFlow</code>(以及<code>MPI</code>):运行<code>Tensorflow/MPI</code>任务，一个任务重的所有<code>task</code>单元必须保证能够一起启动，否则不启动其中任何一个<code>task</code>。如果资源充足到满足运行所有的<code>task</code>那么一切运行正常，但是在绝大部分情况下，尤其是在不具备任何保障的环境下，这种理想环境是不存在的。最坏的场景是由于”资源死锁”导致所有的任务都处于<code>pending</code>状态：每个任务只启动了部分<code>task</code>，该任务还在等他其他的<code>task</code>启动运行。此种问题在联邦域或者跨域场景下会变的更加糟糕，具体细节可详见<img src="https://link.springer.com/article/10.1007/s00354-007-0024-6" alt="`VJM part`文献"></li><li>以<code>pod group</code>的方式调度<code>pod</code>，最小满足模式(<code>Spark</code>)<br>与<code>Tensorflow/MPI</code>不同的是，<code>Spark</code>不需要所有的<code>task(driver/executors)</code>都启动：<code>driver</code>是必要的，但是对于<code>excutors</code>来说是多多益善的（但是至少得有一个）。在此场景下，必须要求<code>scheduler</code>能够保障“最小可用资源”（<code>gang-scheduling</code>），另外其他<code>task</code>还是能够以默认调度策略进行调度。</li><li>同一个<code>pod group</code>中支持不同<code>pod</code>模板（<code>Tensorflow/Spark/PMI</code>）。对于<code>Tensorflow/Spark</code>任务，<code>tasks</code>的镜像可能会不同。例如<a href="https://github.com/kubeflow/tf-operator/blob/master/tf_job_design_doc.md#tfjob-resource"><code>in tensorflow job</code></a>,<code>master</code>和<code>worker</code>就使用不同的镜像。<code>spark</code>下的场景也类似，<code>driver</code>和<code>executor</code>也可能不尽相同。这种情况下就要求<code>k8s</code>在<code>gang-scheduling</code>调度模式中能够在同一<code>pod group </code>中根据不同的<code>pod</code>模板做出相应调度。</li></ol><p><strong>PS</strong>：目前来说，<em>Spark on Kubernetes</em>首先启动运行<code>driver</code>，然后<code>driver</code>再启动其对应的<code>executors</code>，相关的讨论细节请详见<img src="https://docs.google.com/document/d/1AUwcvTtULNvow5M9e428FnlvINO1uQ7ojRoTGuTp4DA/edit#heading=h.nqxvofdllnx0" alt="Customized Controller"><br>4. <code>pod group</code>支持<code>pod</code>顺序/优先级启动（<code>Spark</code>）<br>由于#2（<code>min availiable != desire</code>），#3（不同的<code>tasks</code>），<code>tasks</code>必须按序启动。拿<code>Spark</code>举例，<code>minAvailable=2</code>，<code>desire=4</code>（其中包括<code>driver</code>）。如果没有足够的资源去运行所有的4个<code>tasks</code>，<code>scheduler</code>能够确保<code>driver</code>以及其对应的一个<code>executor</code>能够启动运行，而不是两个<code>exectors</code>（<code>minAvaiable=2</code>）<br>5. 对其他特性具备可扩展性，<code>e.g. IndexedJob(MPI)</code><br><code>gang-scheduling</code>能够满足不少工作场景，但是对于某些场景来说还不够完善，比如<code>MPI</code><img src="https://github.com/kubernetes/kubernetes/issues/14188" alt="#14188">。这就要求<code>gang-scheduling</code>对于一些特性的场景具备可扩展性。</p><h2 id="开放性问-答"><a href="#开放性问-答" class="headerlink" title="开放性问/答"></a>开放性问/答</h2><ol><li><code>gang-scheduling</code>只支持<code>batch</code>工作需求？<br>答案是不，尽管大多数<code>batch</code>工作需求是需要这样的特性，但是对于<code>scheduler</code>来说，<code>gang-scheduling</code>是一种“捆绑式，<code>all-or-nothing</code>模式”，<code>scheduler</code>并不清楚<code>pod</code>中运行的是啥。<code>gang-scheduler</code>必须具备其他特性以支持除<code>batch</code>工作需求的其他场景。</li><li><code>gang-scheduling</code>如何支持其他框架，比如<code>Flink</code>，<code>Storm</code>？<br><code>[k82cn]</code>：我更倾向在资源规划阶段利用好资源可规划的这个阶段来达到<code>scheduler</code>对这些框架的支持，资源规划其实是一个必不可少的共性阶段，在此之后提供给用户可配置能力来自定义使用。<code>e.g.</code><img src="https://github.com/kubeflow/tf-operator" alt="kubeflow/tf-operator"> (一种可自定义的<code>tensorflow</code>控制器)</li></ol>]]></content>
+    
+    
+    <summary type="html">kubernetes 之 Gang scheduling</summary>
+    
+    
+    
+    <category term="kubernetes" scheme="http://kiragoo.github.com/categories/kubernetes/"/>
+    
+    <category term="调度" scheme="http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/"/>
+    
+    <category term="Gang scheduling" scheme="http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/"/>
+    
+    <category term="翻译" scheme="http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/%E7%BF%BB%E8%AF%91/"/>
+    
+    
+    <category term="kubernetes" scheme="http://kiragoo.github.com/tags/kubernetes/"/>
+    
+    <category term="调度" scheme="http://kiragoo.github.com/tags/%E8%B0%83%E5%BA%A6/"/>
+    
+    <category term="Gang scheduling" scheme="http://kiragoo.github.com/tags/Gang-scheduling/"/>
+    
+  </entry>
   
   <entry>
     <title>git无法添加空的文件夹</title>
