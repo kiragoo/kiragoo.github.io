@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://kiragoo.github.com/archives/68bcbff6.html</loc>
+    
+    <lastmod>2021-05-03</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/books/index.html</loc>
     
     <lastmod>2021-05-03</lastmod>
@@ -392,6 +399,13 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/spring-cloud/java/</loc>
+    <lastmod>2021-05-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/spring-cloud/jav/</loc>
     <lastmod>2021-05-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
