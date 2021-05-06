@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2021-05-06T10:29:05.723Z</updated>
+  <updated>2021-05-06T10:33:56.722Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -21,16 +21,12 @@
     <link href="http://kiragoo.github.com/archives/8e7c42c2.html"/>
     <id>http://kiragoo.github.com/archives/8e7c42c2.html</id>
     <published>2021-05-06T09:43:33.000Z</published>
-    <updated>2021-05-06T10:29:05.723Z</updated>
+    <updated>2021-05-06T10:33:56.722Z</updated>
     
     <content type="html"><![CDATA[<blockquote><p><a href="https://github.com/kubernetes/sample-controller/blob/master/docs/controller-client-go.md">controller-client-go</a>,个人翻译。</p></blockquote><h1 id="client-go-under-the-hood"><a href="#client-go-under-the-hood" class="headerlink" title="client-go under the hood"></a><code>client-go under the hood</code></h1><p><a href="https://github.com/kubernetes/client-go/">client-go</a>库包含了多种机制，我们可以在开发自定义的<code>controllers</code>的时候使用这些机制。这些机制定义在<a href="https://github.com/kubernetes/client-go/tree/master/tools/cache">tools/cache folder</a>库中。<br>下图展示了<code>client-go</code>中的各种组件如何运行以及与我们自定义的<code>controller</code>是如何交互的。<br><img src="https://gitee.com/Tony_zhangl/kimg/raw/master/blogimgs/client-go-controller-interaction.jpeg" alt="client-go-controller-interaction"></p><hr><h1 id="client-go-components"><a href="#client-go-components" class="headerlink" title="client-go components"></a><code>client-go components</code></h1><ul><li><code>Reflector</code>：定义在<a href="https://github.com/kubernetes/client-go/blob/master/tools/cache/reflector.go">type Reflector inside package cache</a>,<code>watch</code>着<code>Kubernetes API</code>中具体的<code>resource type(kind)</code>。此功能是在 <em><code>ListAndWatch</code></em> 中实现的。<code>watch</code> 的资源可以是内置的<code>k8s</code>资源也可以是自定义的资源。当<code>reflector</code>通过<code>watch API</code>接收到新的资源实例的存在的话，它将通过相关<code>listing API</code>接口获取到新创建的资源，并将其放在<code>Delta Fifo</code>队列中。</li><li><code>Informer</code>：定义在<a href="https://github.com/kubernetes/client-go/blob/master/tools/cache/controller.go">base controller inside package cache</a>将从<code>Delta Fifo</code>队列中<code>pop</code>出对象。此功能通过<code>processLoop</code>实现。<code>base controller</code>的工作即保存此对象以便后续的检索，以便调用我们的控制器并将对象传递给它们。</li><li><code>Indexer</code>：提供对象的索引功能。其定义在<a href="https://github.com/kubernetes/client-go/blob/master/tools/cache/index.go">type Indexer inside package cache</a>。<br>一个典型的<code>indexing</code>使用场景就是基于对象的<code>labels</code>来创建索引。<code>Indexer</code>是线程安全的来存储对象以及它们的<code>key</code>，在<a href="https://github.com/kubernetes/client-go/blob/master/tools/cache/store.go">type Store inside package cache</a>定义了默认的 <em><code>MetaNamespaceKeyFunc</code></em> 的方法来生成该对象的 <code>key</code>，形如<code>&lt;namespace&gt;/&lt;name&gt;</code>的组合。</li></ul><h1 id="Custom-Controller-components"><a href="#Custom-Controller-components" class="headerlink" title="Custom Controller components"></a><code>Custom Controller components</code></h1><ul><li><code>Informer reference</code>：<code>Informer reference</code> 知晓如何与自定义的资源对象协同工作。在我们自定义的<code>controller</code>中需要构建相关的<code>Informer</code>。</li><li><code>Indexer reference</code>：<code>Indexer reference</code> 知晓如何与自定义的资源对象协同工作。我们自定义的<code>controller</code>需要创建它们。我们将使用这个引用来检索对象，以便以后进行处理。</li></ul><p><code>client-go</code> 提供的<code>base controller</code>中已经提供了<code>NewIndexerInformer</code>函数来创建<code>Informer</code>和<code>Indexer</code>，我们也可以通过<a href="https://github.com/kubernetes/client-go/blob/master/examples/workqueue/main.go#L174">直接调用此函数</a>或者<a href="https://github.com/kubernetes/sample-controller/blob/master/main.go#L61">使用工厂方法来创建通知者</a>。</p><ul><li><code>Resource Event Handlers</code>：<code>Informer</code>将会调用其中的回调函数将其中的对象传递给我们的<code>controller</code>。函数中典型的参数维护着那些将要分发的对象的<code>key</code>并将此<code>key</code>入队列以便后续处理。</li><li><code>Work Queue</code>：此<code>work queue</code>主要用于解耦作用。资源事件处理器函数用于提取对象的<code>key</code>并将其添加到工作队列中。</li><li><code>Process Item</code>：用于处理工作队列中的元素项目。在其中可以有一个或者多个执行实际处理逻辑的行数。这些函数通常使用<a href="https://github.com/kubernetes/client-go/blob/master/examples/workqueue/main.go#L73"><code>Indexer reference</code></a>或者<code>Listing wrapper</code>来检索与<code>key</code>对应的相关对象。</li></ul>]]></content>
     
     
-      
-      
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/kubernetes/sample-controller/blob/master/docs/controller-client-go.md&quot;&gt;controller-client-go&lt;/a&gt;,</summary>
-      
+    <summary type="html">client-go 机制简介</summary>
     
     
     
