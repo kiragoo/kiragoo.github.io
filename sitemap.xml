@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://kiragoo.github.com/archives/3562ba1.html</loc>
+    
+    <lastmod>2021-11-04</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/archives/26a027f0.html</loc>
     
     <lastmod>2021-11-04</lastmod>
@@ -444,6 +451,13 @@
     <priority>0.6</priority>
   </url>
   
+  <url>
+    <loc>http://kiragoo.github.com/tags/kube-proxy/</loc>
+    <lastmod>2021-11-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
 
   
   <url>
@@ -630,6 +644,13 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/Linux/</loc>
+    <lastmod>2021-11-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E7%BD%91%E7%BB%9C/</loc>
     <lastmod>2021-11-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
