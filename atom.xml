@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2022-03-02T03:29:53.093Z</updated>
+  <updated>2022-04-06T15:07:48.125Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -17,30 +17,25 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>mac 之 minikue 设置 bootstrap token</title>
-    <link href="http://kiragoo.github.com/archives/81dfc4d0.html"/>
-    <id>http://kiragoo.github.com/archives/81dfc4d0.html</id>
-    <published>2022-01-19T03:33:19.000Z</published>
-    <updated>2022-03-02T03:29:53.093Z</updated>
+    <title>利用 nektos/act debug github action locally</title>
+    <link href="http://kiragoo.github.com/archives/7c305169.html"/>
+    <id>http://kiragoo.github.com/archives/7c305169.html</id>
+    <published>2022-04-06T14:35:37.000Z</published>
+    <updated>2022-04-06T15:07:48.125Z</updated>
     
-    <content type="html"><![CDATA[<p>通过<code>minikube</code>启动一个集群，默认使用的<code>authentication</code>机制为<code>client certificates</code>. 该<code>certificates</code>对应的账户拥有设置<code>RoleBinding/ClusterRoleBinding</code>.</p><h2 id="启动minikube"><a href="#启动minikube" class="headerlink" title="启动minikube"></a>启动<code>minikube</code></h2><p>首先，如果要使用<code>bootstrap token</code>做验证，同时需要使用<code>rbac</code>做访问管理，那么在启动<code>api server</code>的时候传入参数: <code>--enable-bootstrap-token-auth</code> 和 <code>--authorization-mode=rbac</code>. 在<code>minikube</code>里，等价于：</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">minikube start --extra-config=<span class="string">&quot;apiserver.authorization-mode=rbac&quot;</span> --extra-config=<span class="string">&quot;apiserver.enable-bootstrap-token-auth&quot;</span> --kubernetes-version=v1.21.0</span><br></pre></td></tr></table></figure>]]></content>
+    <content type="html"><![CDATA[<p>我们都知道利用 <code>Github Action</code> 可以用来进行构建<code>CI</code>的流水线，通过构建对应的<code>jobs</code>来实现我们的期望效果，对于目前来说很多时候构建之后的效果目前只能在远端<code>repo</code>才能够看到最终的执行结果，那么我们是否有机会能够在本地构建，然后来类似<code>DEBUG</code>看到最后期望呢？这里我将介绍如何利用<code>nektos/act</code>这一利器来本地执行 <code>Github Action</code>。</p><h1 id="概览"><a href="#概览" class="headerlink" title="概览"></a>概览</h1><p>根据官方仓库的概览描述告诉了我们对于本地构建的急切缘由！</p><ul><li>及时的结果反馈。 通过本地构建我们无需通过 <code>commit/push</code> 的事件来触发远端<code>repo</code>的<code>action</code>。我们完全可以在本地进行模拟<code>Github Actions</code>所达到的效果，从而得到一个及时的结果信息反馈。</li><li>我们完全可以通过流式线形式的构建来替换 <code>Makefile</code> 文件</li></ul><h1 id="实际操作"><a href="#实际操作" class="headerlink" title="实际操作"></a>实际操作</h1><p>这里假设你已经具备基本的<code>Github Action</code>配置能力，且具备初步的使用能力，此篇章主要是对 <code>act</code> 的配置及使用。<br>安装完可以通过 <code>act -h</code> 进行简单的查看验证。<br><img src="https://gitee.com/Tony_zhangl/kimg/raw/master/blogimgs/act-help.png" alt="act-help"></p><h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>本人使用的是 <code>macos</code>，可以通过 <code>brew install act</code> 进行安装，其他 <code>os</code> 发行版可以参考官方仓库中的安装说明进行安装。</p><h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><h3 id="镜像配置"><a href="#镜像配置" class="headerlink" title="镜像配置"></a>镜像配置</h3><p>在远端<code>Github  Action</code> 运行的时候实际上是提供了对应的 <code>vm</code> 资源进行构建，那么在本地的话，<code>act</code> 是提供一个虚机镜像在容器层面进行 <code>os</code> 的模拟，我这里使用的是默认的 <code>platform/docker-image</code>，当然也可以自定定义。执行的命令如下：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">act -P &lt;platform&gt;&#x3D;&lt;docker-image&gt;</span><br></pre></td></tr></table></figure><p>如下是我本地的镜像:<br><img src="https://gitee.com/Tony_zhangl/kimg/raw/master/blogimgs/act-image.png" alt="act-image"></p><h3 id="环境变量及密钥配置"><a href="#环境变量及密钥配置" class="headerlink" title="环境变量及密钥配置"></a>环境变量及密钥配置</h3><p>很多时候在公司内部我们使用的更多的是私有仓库，那么我们在项目工程容器化的时候会拉依赖涉及到私有仓库，在 <code>github</code> 上我们会配置对应的 <code>Action-&gt;secrets</code>，在远端运行<code>github action</code>的时候是有机会获取到的，但是在本地的话我们如何传递呢？</p><p><code>act</code> 支持 <code>secrets</code> 的配置，可以通过命令参数直接传递也可以通过在本地写入配置文件进行配置。<br><img src="https://gitee.com/Tony_zhangl/kimg/raw/master/blogimgs/act-secrets.png" alt="act-secrets"></p>]]></content>
     
     
-      
-      
-    <summary type="html">&lt;p&gt;通过&lt;code&gt;minikube&lt;/code&gt;启动一个集群，默认使用的&lt;code&gt;authentication&lt;/code&gt;机制为&lt;code&gt;client certificates&lt;/code&gt;. 该&lt;code&gt;certificates&lt;/code&gt;对应的账户拥有设置&lt;co</summary>
-      
+    <summary type="html">利用 nektos/act 本地执行 github action</summary>
     
     
     
-    <category term="kubernetes" scheme="http://kiragoo.github.com/categories/kubernetes/"/>
+    <category term="devops" scheme="http://kiragoo.github.com/categories/devops/"/>
     
     
-    <category term="kubernetes" scheme="http://kiragoo.github.com/tags/kubernetes/"/>
+    <category term="github action" scheme="http://kiragoo.github.com/tags/github-action/"/>
     
-    <category term="minikube" scheme="http://kiragoo.github.com/tags/minikube/"/>
-    
-    <category term="token" scheme="http://kiragoo.github.com/tags/token/"/>
+    <category term="act" scheme="http://kiragoo.github.com/tags/act/"/>
     
   </entry>
   

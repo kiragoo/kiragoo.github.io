@@ -2,9 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://kiragoo.github.com/archives/81dfc4d0.html</loc>
+    <loc>http://kiragoo.github.com/archives/7c305169.html</loc>
     
-    <lastmod>2022-03-02</lastmod>
+    <lastmod>2022-04-06</lastmod>
     
   </url>
   
@@ -480,14 +480,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/tags/minikube/</loc>
+    <loc>http://kiragoo.github.com/tags/github-action/</loc>
     <lastmod>2022-04-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/tags/token/</loc>
+    <loc>http://kiragoo.github.com/tags/act/</loc>
     <lastmod>2022-04-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -693,6 +693,13 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/CRD/</loc>
+    <lastmod>2022-04-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/devops/</loc>
     <lastmod>2022-04-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
