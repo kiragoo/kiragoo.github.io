@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PersistentVolumnes 单Pod 访问模式 | kirago杂谈</title><meta name="keywords" content="Kubernetes,PersistentVolumes"><meta name="author" content="kirago"><meta name="copyright" content="kirago"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="介绍与迁移示例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PersistentVolumnes 单Pod 访问模式">
+<meta property="og:url" content="http://kiragoo.github.com/archives/96e8d00f.html">
+<meta property="og:site_name" content="kirago杂谈">
+<meta property="og:description" content="介绍与迁移示例">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg">
+<meta property="article:published_time" content="2021-09-28T03:08:05.000Z">
+<meta property="article:modified_time" content="2021-09-28T07:12:54.211Z">
+<meta property="article:author" content="kirago">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="PersistentVolumes">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://kiragoo.github.com/archives/96e8d00f"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="google-site-verification" content="U43Wg28cXgqBF3zsdKJjCM_HS7mLpBZCbTr_l28-SVU"/><meta name="msvalidate.01" content="D46A8B7283B082BEE5F98315AD0AF253"/><meta name="baidu-site-verification" content="code-Xd19SnTCHD"/><link rel="stylesheet" href="/null"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-09-28 15:12:54'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="kirago杂谈" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">34</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-book"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/messageboard/"><i class="fa-fw fas fa-coffee"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">kirago杂谈</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-heartbeat"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page child" href="/books/"><i class="fa-fw fas fa-book"></i><span> 书籍</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/messageboard/"><i class="fa-fw fas fa-coffee"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">PersistentVolumnes 单Pod 访问模式</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-09-28T03:08:05.000Z" title="发表于 2021-09-28 11:08:05">2021-09-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-09-28T07:12:54.211Z" title="更新于 2021-09-28 15:12:54">2021-09-28</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Kubernetes/">Kubernetes</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Kubernetes/PersistentVolumes/">PersistentVolumes</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="PersistentVolumnes 单Pod 访问模式"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p>翻译自<a target="_blank" rel="noopener" href="https://kubernetes.io/blog/2021/09/13/read-write-once-pod-access-mode-alpha/">Introducing Single Pod Access Mode for PersistentVolumes</a></p>
+</blockquote>
+<h1 id="访问模式及重要意义"><a href="#访问模式及重要意义" class="headerlink" title="访问模式及重要意义"></a>访问模式及重要意义</h1><p>当使用持久化储存时，对于存储有多种模式进行访问使用。</p>
+<p>例如，存储系统中的网络文件可以同时被多个用户进行读写数据。在另一种场景下，也许每个用户允许进行读而不具备写的权限。对于高敏数据，可能只允许一个用户用户进行读写操作而不是所有的用户。</p>
+<p>在 <code>Kubernetes</code> 的世界中，<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"><code>access mode</code></a>就是我们定义持久化存储如何使用的方式。这些访问方式作为 <code>PVs</code> 和 <code>PVCs</code> 中 <code>spec</code> 描述的一部分内容。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">shared-cache</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ReadWriteMany</span> <span class="comment"># Allow many pods to access shared-cache simultaneously.</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+<p>在 <code>v1.22</code> 版本之前， <code>Kubernetes</code> 为 <code>PVs</code> 和 <code>PVCs</code>提供如下三种访问模式:</p>
+<ul>
+<li><code>ReadWriteOnce</code> - <code>volume</code> 只允许被单个 <strong><code>node</code></strong> 进行读写</li>
+<li><code>ReadOnlyMany</code> - <code>volume</code> 允许被多个 <strong><code>node</code></strong> 进行读操作</li>
+<li><code>ReadWriteMany</code> - <code>volume</code> 允许被多个 <strong><code>node</code></strong> 进行读写操作</li>
+</ul>
+<p>这些访问模式通过 <code>Kubernetes</code> 组件如 <code>kube-controller-manager</code> 和 <code>kubelet</code> 来保证相应的 <code>Pods</code> 能够访问所应用的 <code>PersistentVolume</code>.</p>
+<h1 id="新的访问模式及运行原理"><a href="#新的访问模式及运行原理" class="headerlink" title="新的访问模式及运行原理"></a>新的访问模式及运行原理</h1><p><code>Kubernetes v1.22</code> 介绍了 <code>PVs</code> 和 <code>PVCs</code> 的第四种访问模式：</p>
+<ul>
+<li><code>ReadWriteOncePod</code> - <code>volume</code> 允许单个 <strong><code>Pod</code></strong> 进行读写操作</li>
+</ul>
+<p>如果你对使用了 <code>PVC</code> 的 <code>Pod</code> 配置了 <code>ReadWriteOncePod</code> 的访问模式，<code>Kubernetes</code> 将确保此 <code>Pod</code> 是集群中唯一能够对此 <code>PVC</code> 进行读写的唯一 <code>Pod</code>.</p>
+<p>如果你将另一个 <code>Pod</code> 对同一个 <code>PVC</code> 进行配置关联且也是配置了此访问模式，那么此 <code>Pod</code> 将无法启动，因为此 <code>PVC</code> 已经被另一个 <code>Pod</code> 使用了。例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Events:</span><br><span class="line">  Type     Reason            Age   From               Message</span><br><span class="line">  ----     ------            ----  ----               -------</span><br><span class="line">  Warning  FailedScheduling  1s    default-scheduler  0/1 nodes are available: 1 node has pod using PersistentVolumeClaim with the same name and ReadWriteOncePod access mode.</span><br></pre></td></tr></table></figure>
+
+<h2 id="此访问模式与-ReadWriteOnce-的区别？"><a href="#此访问模式与-ReadWriteOnce-的区别？" class="headerlink" title="此访问模式与 ReadWriteOnce 的区别？"></a>此访问模式与 <code>ReadWriteOnce</code> 的区别？</h2><p><code>ReadWriteOnce</code> 访问模式约束 <code>volume</code> 对应单个 <code>node</code>，这意味着在同一个节点上的多个 <code>Pods</code> 能够读写通过一个 <code>volume</code>。对于某些应用此访问模式可能是个潜在的重大问题，尤其是对那些要求至多要求保证只有一个数据写入而言。</p>
+<p>对 <code>PVC</code> 设置 <code>ReadWriteOncePod</code> 访问策略，那么 <code>Kubernetes</code> 将保证只有一个 <code>Pod</code> 能够进行访问。</p>
+<h1 id="如何使用？"><a href="#如何使用？" class="headerlink" title="如何使用？"></a>如何使用？</h1><p><code>ReadWriteOncePod</code> 访问模式在 <code>v1.22</code> 版本中是 <code>alpha</code> 版本，并且支持 <code>CSI volume</code>。首先你得在 <code>kube-apiserver</code>, <code>kube-scheduler</code>, <code>kubelet</code> 中开启对 <code>ReadWriteOncePod</code> 的<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates">特性</a>。你可以通过设置如下命令行参数进行配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">--feature-gates=<span class="string">&quot;...,ReadWriteOncePod=true&quot;</span></span><br><span class="line"></span><br><span class="line">另外你的将如下 `CSI sidecars` 升级到如下版本或更高：</span><br><span class="line">- [csi-provisioner:v3.0.0+](https://github.com/kubernetes-csi/external-provisioner/releases/tag/v3.0.0)</span><br><span class="line">- [csi-attacher:v3.3.0+](https://github.com/kubernetes-csi/external-attacher/releases/tag/v3.3.0)</span><br><span class="line">- [csi-resizer:v1.3.0+](https://github.com/kubernetes-csi/external-resizer/releases/tag/v1.3.0)</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建-PersistentVolumeClaim"><a href="#创建-PersistentVolumeClaim" class="headerlink" title="创建 PersistentVolumeClaim"></a>创建 <code>PersistentVolumeClaim</code></h2><p>对 <code>PVs</code> 和 <code>PVCs</code> 使用 <code>ReadWriteOncePod</code> 访问模式，你需创建一个新的 <code>PVC</code> 配置如下的访问模式：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">single-writer-only</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ReadWriteOncePod</span> <span class="comment"># Allow only a single pod to access single-writer-only.</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+<p>如果你的存储插件支持 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/"><code>dynamic provisioning</code></a>，新的 <code>PersistentVolumes</code> 将会应用<code>ReadWriteOncePod</code>访问模式。</p>
+<h2 id="迁移已有的-PersistentVolumes"><a href="#迁移已有的-PersistentVolumes" class="headerlink" title="迁移已有的 PersistentVolumes"></a>迁移已有的 <code>PersistentVolumes</code></h2><p>如果你已经有了存在的 <code>PersistentVolumes</code>，也可以将它们迁移使用 <code>ReadWriteOncePod</code> 访问模式。</p>
+<p>在此例子中，我们已经拥有了与 <code>cat-pictures-pv</code> 绑定的 <code>cat-pictures-pvc PersistentVolumeClaim</code>，另外 <code>cat-pictures-writer Deployment</code> 已经使用了此 <code>PersistentVolumeClaim</code>。</p>
+<p>第一步，你需要编辑你的 <code>PersistentVolume</code> 中的 <code>spec.persistentVolumeReclaimPolicy</code> 将其改为 **<code>Retain</code>**。这是为了保证当我们相关 <code>PersistentVolumeClaim</code> 的时候 <code>PersistentVolume</code> 将不会被删除。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch pv cat-pictures-pv -p <span class="string">&#x27;&#123;&quot;spec&quot;:&#123;&quot;persistentVolumeReclaimPolicy&quot;:&quot;Retain&quot;&#125;&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>下一步你需要停止那些使用了你想做迁移的 <code>PersistentVolume</code> 想关联的 <code>PersistentVolumeClaim</code> 的工作平面，同事删除这些 <code>PersistentVolumeClaim</code>。</p>
+<p>一旦如上步骤已经完成，你需要清除与你相关的 <code>PersistenVolume</code> 相关的 <code>spec.claimRef.uid</code> 字段内容，以便确保 <code>PersistentVolumeClaims</code> 能够在再次创建过程中能够被绑定。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl scale --replicas=0 deployment cat-pictures-writer</span><br><span class="line">kubectl delete pvc cat-pictures-pvc</span><br><span class="line">kubectl patch pv cat-pictures-pv -p <span class="string">&#x27;&#123;&quot;spec&quot;:&#123;&quot;claimRef&quot;:&#123;&quot;uid&quot;:&quot;&quot;&#125;&#125;&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>结束之后你需要将 <code>PersistentVolume</code> 的访问模式替换为 <code>ReadWriteOncePod</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch pv cat-pictures-pv -p <span class="string">&#x27;&#123;&quot;spec&quot;:&#123;&quot;accessModes&quot;:[&quot;ReadWriteOncePod&quot;]&#125;&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>Note</strong>：<code>ReadWriteOncePod</code> 访问模式无法与其他的访问模式进行结合使用。确保在更新 <code>PersistentVolume</code> 的时候 <code>ReadWriteOncePod</code>是唯一的访问模式，否则将会放生请求失败。</p>
+</blockquote>
+<p>下一步你的得将你的 <code>PersistentVolumeClaim</code> 修改为 <code>ReadWriteOncePod</code> 作为唯一的访问模式。同时你还得将配置 <code>PersistentVolumeClaim</code> 中的 <code>spec.volumeName</code> 对应到你的 <code>PersistentVolume</code>。</p>
+<p>一旦以上步骤都已经完成，你可以重新创建你的 <code>PersistenVolumeClaim</code> 并且启动你的工作平面：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># IMPORTANT: Make sure to edit your PVC in cat-pictures-pvc.yaml before applying. You need to:</span></span><br><span class="line"><span class="comment"># - Set ReadWriteOncePod as the only access mode</span></span><br><span class="line"><span class="comment"># - Set spec.volumeName to &quot;cat-pictures-pv&quot;</span></span><br><span class="line"></span><br><span class="line">kubectl apply -f cat-pictures-pvc.yaml</span><br><span class="line">kubectl apply -f cat-pictures-writer-deployment.yaml</span><br></pre></td></tr></table></figure>
+
+<p>最后你可能需要编辑的你的 <code>PersistentVolume</code> 中 <code>spec.persistentVolumeReclaimPolicy</code> 字段并将其配置为 <code>Delete</code> 如果你确实改动过它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch pv cat-pictures-pv -p <span class="string">&#x27;&#123;&quot;spec&quot;:&#123;&quot;persistentVolumeReclaimPolicy&quot;:&quot;Delete&quot;&#125;&#125;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>你可以阅读<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/">Configure a Pod to Use a PersistentVolume for Storage</a>了解更多的细节。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">kirago</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com/archives/96e8d00f.html">http://kiragoo.github.com/archives/96e8d00f.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kiragoo.github.com" target="_blank">kirago杂谈</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Kubernetes/">Kubernetes</a><a class="post-meta__tags" href="/tags/PersistentVolumes/">PersistentVolumes</a></div><div class="post_share"><div class="social-share" data-image="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="/null" media="print" onload="this.media='all'"><script src="/null" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/archives/a66802dc.html"><img class="prev-cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Kubernetes之编写Controller</div></div></a></div><div class="next-post pull-right"><a href="/archives/1d9c7e0d.html"><img class="next-cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">深入理解k8s网络原理之-Service原理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span> 相关推荐</span></div><div class="relatedPosts-list"><div><a href="/archives/a66802dc.html" title="Kubernetes之编写Controller"><img class="cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-10-14</div><div class="title">Kubernetes之编写Controller</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-info-avatar is-center"><img class="avatar-img" src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-info__name">kirago</div><div class="author-info__description">勿以浮沙筑高台</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">34</div></a></div><div class="card-info-data-item is-center"><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kiragoo" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:zhangl910201@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%BC%8F%E5%8F%8A%E9%87%8D%E8%A6%81%E6%84%8F%E4%B9%89"><span class="toc-number">1.</span> <span class="toc-text">访问模式及重要意义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%B0%E7%9A%84%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%BC%8F%E5%8F%8A%E8%BF%90%E8%A1%8C%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">新的访问模式及运行原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AD%A4%E8%AE%BF%E9%97%AE%E6%A8%A1%E5%BC%8F%E4%B8%8E-ReadWriteOnce-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="toc-number">2.1.</span> <span class="toc-text">此访问模式与 ReadWriteOnce 的区别？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%EF%BC%9F"><span class="toc-number">3.</span> <span class="toc-text">如何使用？</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA-PersistentVolumeClaim"><span class="toc-number">3.1.</span> <span class="toc-text">创建 PersistentVolumeClaim</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%81%E7%A7%BB%E5%B7%B2%E6%9C%89%E7%9A%84-PersistentVolumes"><span class="toc-number">3.2.</span> <span class="toc-text">迁移已有的 PersistentVolumes</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally"><img src="https://github.com/kiragoo/kimg/raw/master/blogimgs/act-devops.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="利用 nektos/act debug github action locally"/></a><div class="content"><a class="title" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally">利用 nektos/act debug github action locally</a><time datetime="2022-04-06T14:35:37.000Z" title="发表于 2022-04-06 22:35:37">2022-04-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/ba22a6bc.html" title="手撕client-go:如何编写CRD client"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="手撕client-go:如何编写CRD client"/></a><div class="content"><a class="title" href="/archives/ba22a6bc.html" title="手撕client-go:如何编写CRD client">手撕client-go:如何编写CRD client</a><time datetime="2021-12-24T12:46:08.000Z" title="发表于 2021-12-24 20:46:08">2021-12-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/3562ba1.html" title="手撕kube-proxy iptables实例"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="手撕kube-proxy iptables实例"/></a><div class="content"><a class="title" href="/archives/3562ba1.html" title="手撕kube-proxy iptables实例">手撕kube-proxy iptables实例</a><time datetime="2021-11-04T03:58:55.000Z" title="发表于 2021-11-04 11:58:55">2021-11-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/26a027f0.html" title="iptables 入门出坑"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="iptables 入门出坑"/></a><div class="content"><a class="title" href="/archives/26a027f0.html" title="iptables 入门出坑">iptables 入门出坑</a><time datetime="2021-11-02T02:42:35.000Z" title="发表于 2021-11-02 10:42:35">2021-11-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/f7f100a2.html" title="kubernetes源码分析系列之源码分析系列之Statefulset Controller"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubernetes源码分析系列之源码分析系列之Statefulset Controller"/></a><div class="content"><a class="title" href="/archives/f7f100a2.html" title="kubernetes源码分析系列之源码分析系列之Statefulset Controller">kubernetes源码分析系列之源码分析系列之Statefulset Controller</a><time datetime="2021-10-21T03:01:43.000Z" title="发表于 2021-10-21 11:01:43">2021-10-21</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By kirago</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/null"></script><script src="/null"></script><div class="js-pjax"></div><script async data-pjax src="/null"></script></div></body></html>
