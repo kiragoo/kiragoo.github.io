@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS | kirago杂谈</title><meta name="keywords" content="Kubernetes"><meta name="author" content="kirago"><meta name="copyright" content="kirago"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="翻译自USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS  在使用Prometheus监控Kubernetes集群时，我注意到一个反复出现的问题：Prometheus检索的指标可能包含敏感信息（例如，Prometheus节点导出器暴露了主机的内核版本），潜在的入侵者可能利用这些信息在各自的Kubernetes集群中钻营。所以我问自己一个问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS">
+<meta property="og:url" content="http://kiragoo.github.com/archives/217459e6.html">
+<meta property="og:site_name" content="kirago杂谈">
+<meta property="og:description" content="翻译自USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS  在使用Prometheus监控Kubernetes集群时，我注意到一个反复出现的问题：Prometheus检索的指标可能包含敏感信息（例如，Prometheus节点导出器暴露了主机的内核版本），潜在的入侵者可能利用这些信息在各自的Kubernetes集群中钻营。所以我问自己一个问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg">
+<meta property="article:published_time" content="2022-04-25T13:21:12.000Z">
+<meta property="article:modified_time" content="2023-04-03T02:13:33.529Z">
+<meta property="article:author" content="kirago">
+<meta property="article:tag" content="Kubernetes">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://kiragoo.github.com/archives/217459e6"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-04-03 10:13:33'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="kirago杂谈" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">35</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">37</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">kirago杂谈</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-04-25T13:21:12.000Z" title="发表于 2022-04-25 21:21:12">2022-04-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-04-03T02:13:33.529Z" title="更新于 2023-04-03 10:13:33">2023-04-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Kubernetes/">Kubernetes</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p>翻译自<a target="_blank" rel="noopener" href="https://www.brancz.com/2018/02/27/using-kube-rbac-proxy-to-secure-kubernetes-workloads/">USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS</a></p>
+</blockquote>
+<p>在使用Prometheus监控Kubernetes集群时，我注意到一个反复出现的问题：Prometheus检索的指标可能包含敏感信息（例如，Prometheus节点导出器暴露了主机的内核版本），潜在的入侵者可能利用这些信息在各自的Kubernetes集群中钻营。所以我问自己一个问题。如何认证和授权来自Prometheus的请求，以便Prometheus（只有Prometheus）能够从Pod中运行的应用程序中检索指标？</p>
+<p>在Prometheus中验证和授权指标端点的默认答案是使用TLS客户端证书，然而，由于发行、验证和轮换客户端证书会变得相当复杂，因此，Prometheus请求在大多数情况下根本没有经过验证和授权。</p>
+<p>我建立了kube-rbac-proxy，这是一个针对单一上游的小型HTTP代理，可以使用SubjectAccessReviews对Kubernetes API执行RBAC授权。在这篇文章中，我想解释一下，它是如何使用Kubernetes RBAC来完成这个任务的。</p>
+<h1 id="RBAC是如何在幕后工作的？"><a href="#RBAC是如何在幕后工作的？" class="headerlink" title="RBAC是如何在幕后工作的？"></a>RBAC是如何在幕后工作的？</h1><p>Kubernetes基于角色的访问控制（RBAC）本身只解决了一半的问题。顾名思义，它只涉及访问控制，意味着授权，而不是认证。在一个请求能够被授权之前，它需要被认证。简单地说：我们需要找出谁在执行这个请求。在Kubernetes中，服务自我认证的机制是ServiceAccount令牌。</p>
+<p>Kubernetes API公开了验证ServiceAccount令牌的能力，使用所谓的TokenReview。TokenReview的响应仅仅是ServiceAccount令牌是否被成功验证，以及指定的令牌与哪个用户有关。kube-rbac-proxy期望ServiceAccount令牌在Authorization HTTP头中被指定，然后使用TokenReview对其进行验证。</p>
+<p>在这一点上，一个请求已经被验证，但还没有被授权。与TokenReview平行，Kuberenetes有一个SubjectAccessReview，它是授权API的一部分。在SubjectAccessReview中，指定了一个预期的行动以及想要执行该行动的用户。在Prometheus请求度量的具体案例中，/metrics HTTP端点被请求。不幸的是，在Kubernetes中这不是一个完全指定的资源，然而，SubjectAccessReview资源也能够授权所谓的 “非资源请求”。但可能性是无穷的，例如：授权一个代理请求，SubjecAccessReview也可以检查以确保用户有服务/代理RBAC角色。</p>
+<p>当用Prometheus监控Kubernetes时，那么Prometheus服务器可能已经拥有访问/metrics非资源url的权限，因为从Kubernetes apiserver检索指标需要同样的RBAC角色。</p>
+<h1 id="kube-rbac-proxy"><a href="#kube-rbac-proxy" class="headerlink" title="kube-rbac-proxy"></a>kube-rbac-proxy</h1><p>现在已经解释了所有必要的部分，让我们看看kube-rbac-proxy是如何具体地验证和授权一个请求的，案例在本博文的开头就已经说明了。普罗米修斯从节点输出器中请求度量。</p>
+<p>当Prometheus对node-exporter执行请求时，kube-rbac-proxy在它前面，kube-rbac-proxy用提供的ServiceAccount令牌执行TokenReview，如果TokenReview成功，它继续使用SubjectAccessReview来验证，ServiceAccount被授权访问/metrics HTTP端点。</p>
+<p>可见，从Prometheus验证和授权请求的整个流程是这样的:<br><img src="https://github.com/kiragoo/kimg/blog/master/blogimgs/kube-rbac-proxy.png" alt="kube-rbac-proxy"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>如果你想做的是用一个静态授权配置文件来授权某些请求，你可能想看看kube-rbac-proxy。</p>
+<p>虽然在你的工作负载中执行授权可能仍然有用–特别是当需要更精细的或特定的数据访问时–但很高兴知道在Kubernetes中，你有可用的工具，可以让你在花费时间之前走得更远。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com">kirago</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com/archives/217459e6.html">http://kiragoo.github.com/archives/217459e6.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kiragoo.github.com" target="_blank">kirago杂谈</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Kubernetes/">Kubernetes</a></div><div class="post_share"><div class="social-share" data-image="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/gh/overtrue/share.js@master/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/archives/a459e2be.html"><img class="prev-cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">通过 OPA 运行 Kubernetes Pod Security Policy</div></div></a></div><div class="next-post pull-right"><a href="/archives/7c305169.html"><img class="next-cover" src="https://github.com/kiragoo/kimg/blog/master/blogimgs/act-devops.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">利用 nektos/act debug github action locally</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/archives/a66802dc.html" title="Kubernetes之编写Controller"><img class="cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-10-14</div><div class="title">Kubernetes之编写Controller</div></div></a></div><div><a href="/archives/96e8d00f.html" title="PersistentVolumnes 单Pod 访问模式"><img class="cover" src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-09-28</div><div class="title">PersistentVolumnes 单Pod 访问模式</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="http://tva1.sinaimg.cn/large/7a56748fly1gpf04wkr1wj20qs13wabo.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">kirago</div><div class="author-info__description">勿以浮沙筑高台</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">35</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">37</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kiragoo" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:zhangl910201@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#RBAC%E6%98%AF%E5%A6%82%E4%BD%95%E5%9C%A8%E5%B9%95%E5%90%8E%E5%B7%A5%E4%BD%9C%E7%9A%84%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">RBAC是如何在幕后工作的？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#kube-rbac-proxy"><span class="toc-number">2.</span> <span class="toc-text">kube-rbac-proxy</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/archives/4df09d70.html" title="kubebuilder 去 kube-rbac-proxy 体验"><img src="https://github.com/kiragoo/kimg/blog/master/blogimgs/release-1.1.6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubebuilder 去 kube-rbac-proxy 体验"/></a><div class="content"><a class="title" href="/archives/4df09d70.html" title="kubebuilder 去 kube-rbac-proxy 体验">kubebuilder 去 kube-rbac-proxy 体验</a><time datetime="2022-04-26T10:12:36.000Z" title="发表于 2022-04-26 18:12:36">2022-04-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/a459e2be.html" title="通过 OPA 运行 Kubernetes Pod Security Policy"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="通过 OPA 运行 Kubernetes Pod Security Policy"/></a><div class="content"><a class="title" href="/archives/a459e2be.html" title="通过 OPA 运行 Kubernetes Pod Security Policy">通过 OPA 运行 Kubernetes Pod Security Policy</a><time datetime="2022-04-26T04:15:05.000Z" title="发表于 2022-04-26 12:15:05">2022-04-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/217459e6.html" title="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS"/></a><div class="content"><a class="title" href="/archives/217459e6.html" title="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS">USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS</a><time datetime="2022-04-25T13:21:12.000Z" title="发表于 2022-04-25 21:21:12">2022-04-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally"><img src="https://github.com/kiragoo/kimg/blog/master/blogimgs/act-devops.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="利用 nektos/act debug github action locally"/></a><div class="content"><a class="title" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally">利用 nektos/act debug github action locally</a><time datetime="2022-04-06T14:35:37.000Z" title="发表于 2022-04-06 22:35:37">2022-04-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/ba22a6bc.html" title="手撕client-go:如何编写CRD client"><img src="http://tva4.sinaimg.cn/wap800/7a56748fgy1gpf0fb6s0ej22l51xu4d3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="手撕client-go:如何编写CRD client"/></a><div class="content"><a class="title" href="/archives/ba22a6bc.html" title="手撕client-go:如何编写CRD client">手撕client-go:如何编写CRD client</a><time datetime="2021-12-24T12:46:08.000Z" title="发表于 2021-12-24 20:46:08">2021-12-24</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By kirago</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
