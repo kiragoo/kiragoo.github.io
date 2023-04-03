@@ -146,15 +146,6 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/1985234d.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://kiragoo.github.com/archives/16e48aa0.html</loc>
     
     <lastmod>2023-04-03</lastmod>
@@ -165,6 +156,15 @@
   
   <url>
     <loc>http://kiragoo.github.com/archives/c41b2749.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/1985234d.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -493,6 +493,20 @@
   </url>
   
   <url>
+    <loc>http://kiragoo.github.com/tags/%E8%B0%83%E5%BA%A6/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/Gang-scheduling/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/tags/%E4%BC%98%E5%85%88%E7%BA%A7%E4%B8%8E%E6%8A%A2%E5%8D%A0/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -508,20 +522,6 @@
   
   <url>
     <loc>http://kiragoo.github.com/tags/kube-scheduler/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/%E8%B0%83%E5%BA%A6/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/Gang-scheduling/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -684,14 +684,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/%E6%96%87%E6%A1%A3/istio/</loc>
+    <loc>http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/%E5%B7%A5%E5%85%B7/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E6%96%87%E6%A1%A3/istio/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -705,14 +705,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/%E4%BC%98%E5%85%88%E7%BA%A7/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/kube-scheduler/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E4%BC%98%E5%85%88%E7%BA%A7/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -726,7 +726,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/kube-scheduler/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -803,14 +803,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/%E4%BC%98%E5%85%88%E7%BA%A7/%E6%8A%A2%E5%8D%A0%E5%BC%8F%E8%B0%83%E5%BA%A6/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/</loc>
+    <loc>http://kiragoo.github.com/categories/kubernetes/%E4%BC%98%E5%85%88%E7%BA%A7/%E6%8A%A2%E5%8D%A0%E5%BC%8F%E8%B0%83%E5%BA%A6/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
