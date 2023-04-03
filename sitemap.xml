@@ -2,15 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://kiragoo.github.com/archives/a459e2be.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://kiragoo.github.com/about/index.html</loc>
     
     <lastmod>2023-04-03</lastmod>
@@ -20,25 +11,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/7c305169.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/4df09d70.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/1d9c7e0d.html</loc>
+    <loc>http://kiragoo.github.com/archives/6a996a50.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -56,7 +29,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/f656d80b.html</loc>
+    <loc>http://kiragoo.github.com/archives/c41b2749.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -65,7 +38,43 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/1bff6d5.html</loc>
+    <loc>http://kiragoo.github.com/archives/a1a3f20a.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/1d9c7e0d.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/68bcbff6.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/c3a53ddf.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/f656d80b.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -83,7 +92,16 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/26a027f0.html</loc>
+    <loc>http://kiragoo.github.com/archives/c6fb67e0.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/16e48aa0.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -93,6 +111,42 @@
   
   <url>
     <loc>http://kiragoo.github.com/archives/217459e6.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/26a027f0.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/1bff6d5.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/ffa85151.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/archives/1985234d.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -119,7 +173,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/c6fb67e0.html</loc>
+    <loc>http://kiragoo.github.com/archives/7c305169.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -128,7 +182,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/68bcbff6.html</loc>
+    <loc>http://kiragoo.github.com/archives/4df09d70.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -137,7 +191,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/a1a3f20a.html</loc>
+    <loc>http://kiragoo.github.com/archives/a459e2be.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -146,52 +200,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/archives/16e48aa0.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/c41b2749.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/1985234d.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/ffa85151.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/6a996a50.html</loc>
-    
-    <lastmod>2023-04-03</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/c3a53ddf.html</loc>
+    <loc>http://kiragoo.github.com/archives/f815397.html</loc>
     
     <lastmod>2023-04-03</lastmod>
     
@@ -255,15 +264,6 @@
   
   <url>
     <loc>http://kiragoo.github.com/archives/36986800.html</loc>
-    
-    <lastmod>2021-04-16</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/archives/f815397.html</loc>
     
     <lastmod>2021-04-16</lastmod>
     
@@ -388,27 +388,6 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/tags/kubernetes-istio/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/Kubernetes/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/tags/Controller/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>http://kiragoo.github.com/tags/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -430,6 +409,27 @@
   </url>
   
   <url>
+    <loc>http://kiragoo.github.com/tags/kubernetes-istio/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/Kubernetes/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/Controller/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/tags/k8s/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -444,14 +444,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/tags/PersistentVolumes/</loc>
+    <loc>http://kiragoo.github.com/tags/spring-cloud/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/tags/spring-cloud/</loc>
+    <loc>http://kiragoo.github.com/tags/PersistentVolumes/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -628,14 +628,14 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/Kubernetes/</loc>
+    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <loc>http://kiragoo.github.com/categories/Kubernetes/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -663,6 +663,13 @@
   </url>
   
   <url>
+    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/istio/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -671,13 +678,6 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/Kubernetes/Controller/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -719,7 +719,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/Kubernetes/PersistentVolumes/</loc>
+    <loc>http://kiragoo.github.com/categories/spring-cloud/java/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -740,7 +740,7 @@
   </url>
   
   <url>
-    <loc>http://kiragoo.github.com/categories/spring-cloud/java/</loc>
+    <loc>http://kiragoo.github.com/categories/Kubernetes/PersistentVolumes/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -755,6 +755,13 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/devops/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/leetcode/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -776,13 +783,6 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/network/</loc>
-    <lastmod>2023-04-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://kiragoo.github.com/categories/%E7%BC%96%E7%A8%8B/%E7%AE%97%E6%B3%95/leetcode/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
