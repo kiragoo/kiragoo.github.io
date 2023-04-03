@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://kiragoo.github.com/archives/a46d2134.html</loc>
+    
+    <lastmod>2023-04-03</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://kiragoo.github.com/archives/c882714e.html</loc>
     
     <lastmod>2023-04-03</lastmod>
@@ -634,6 +643,20 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>http://kiragoo.github.com/tags/%E5%AE%B9%E5%99%A8/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/tags/containerd/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
@@ -841,6 +864,13 @@
   
   <url>
     <loc>http://kiragoo.github.com/categories/kubernetes/%E8%B0%83%E5%BA%A6/Gang-scheduling/%E7%BF%BB%E8%AF%91/</loc>
+    <lastmod>2023-04-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://kiragoo.github.com/categories/containerd/</loc>
     <lastmod>2023-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
