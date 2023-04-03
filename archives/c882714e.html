@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>SR-IOV VF 网卡命名问题记录 | kirago杂谈</title><meta name="keywords" content="Linux"><meta name="author" content="kirago"><meta name="copyright" content="kirago"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="SR-IOV VF 网卡命名问题简单记录下最近工作项目中通过 KVM + SR-IOV VF 来构建虚拟网关节点，在资源实施规划部署时需要对每个网络平面的网卡进行统一化的命名，具体形如Domain Node Name 和 Admin Node Name 网卡都有统一的命名规范。 通过业务脚本实现对应网卡及 Slot 配置文件通过 virsh atach 网卡。eg: 1virsh attach-d">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SR-IOV VF 网卡命名问题记录">
+<meta property="og:url" content="http://kiragoo.github.com/archives/c882714e.html">
+<meta property="og:site_name" content="kirago杂谈">
+<meta property="og:description" content="SR-IOV VF 网卡命名问题简单记录下最近工作项目中通过 KVM + SR-IOV VF 来构建虚拟网关节点，在资源实施规划部署时需要对每个网络平面的网卡进行统一化的命名，具体形如Domain Node Name 和 Admin Node Name 网卡都有统一的命名规范。 通过业务脚本实现对应网卡及 Slot 配置文件通过 virsh atach 网卡。eg: 1virsh attach-d">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg">
+<meta property="article:published_time" content="2023-04-03T09:05:37.000Z">
+<meta property="article:modified_time" content="2023-04-03T09:31:18.194Z">
+<meta property="article:author" content="kirago">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://kiragoo.github.com/archives/c882714e"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SR-IOV VF 网卡命名问题记录',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-04-03 17:31:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="kirago杂谈" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/config/avatar.jpeg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">39</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">kirago杂谈</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">SR-IOV VF 网卡命名问题记录</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-04-03T09:05:37.000Z" title="发表于 2023-04-03 17:05:37">2023-04-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-04-03T09:31:18.194Z" title="更新于 2023-04-03 17:31:18">2023-04-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Linux/">Linux</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="SR-IOV VF 网卡命名问题记录"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="SR-IOV-VF-网卡命名问题简单记录下"><a href="#SR-IOV-VF-网卡命名问题简单记录下" class="headerlink" title="SR-IOV VF 网卡命名问题简单记录下"></a>SR-IOV VF 网卡命名问题简单记录下</h1><p>最近工作项目中通过 <code>KVM</code> + <code>SR-IOV VF</code> 来构建虚拟网关节点，在资源实施规划部署时需要对每个网络平面的网卡进行统一化的命名，具体形如<br><code>Domain Node Name</code> 和 <code>Admin Node Name</code> 网卡都有统一的命名规范。</p>
+<h2 id="通过业务脚本实现对应网卡及-Slot-配置文件"><a href="#通过业务脚本实现对应网卡及-Slot-配置文件" class="headerlink" title="通过业务脚本实现对应网卡及 Slot 配置文件"></a>通过业务脚本实现对应网卡及 <code>Slot</code> 配置文件</h2><p>通过 <code>virsh</code> atach 网卡。eg:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">virsh attach-device <span class="variable">$&#123;NODE_NAME&#125;</span> <span class="variable">$&#123;XML_CONFIG&#125;</span> --config</span><br></pre></td></tr></table></figure>
+
+<p>为了保证生效识别到，最好通过 <code>virsh shutdown $&#123;NODE_NAME&#125;</code> 及 <code>virsh start $&#123;NODE_NAME&#125;</code> 来拉起网卡。<br>由于时间问题，具体的环境已经没有这里就不做贴图了。</p>
+<p>这个时候通过 <code>ip a</code> 能够发现识别到网卡，此时借鉴如下 <img src="https://www.thegeekdiary.com/how-to-set-a-custom-interface-name-with-networkmanager-in-centos-rhel-7/" alt="How to Set a custom Interface Name With NetworkManager in Centos/RHEL 7"> 都不行。</p>
+<p>通过自己的理解和调研，其实以上介绍的就是通过对  <code>/etc/udev/rules.d</code> 进行命名配置让 <code>kennel</code> 在系统启动引导阶段进行网卡重命名。</p>
+<p>后面通过另外一种方式绕了一层：</p>
+<ul>
+<li>首先对原有 <code>/etc/default/grub</code> 配置文件进行配置， <code>mv /etc/default/grub /etc/default/grub.bak</code></li>
+<li>配置 <code>/etc/default/grub</code> 内容：</li>
+</ul>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GRUB_TIMEOUT=5</span><br><span class="line">GRUB_DISTRIBUTOR=&quot;$(sed &#x27;s, release .*$,,g&#x27; /etc/system-release)&quot;</span><br><span class="line">GRUB_DEFAULT=saved</span><br><span class="line">GRUB_DISABLE_SUBMENU=true</span><br><span class="line">GRUB_TERMINAL_OUTPUT=&quot;ofconsole&quot;</span><br><span class="line">GRUB_CMDLINE_LINUX=&quot;crashkernel=auto rd.lvm.lv=cl/root rd.lvm.lv=cl/swap net.ifnames=0 rhgb quiet&quot;  &gt;&gt; 添加 net.ifnames=0 重新生成网卡命名配置规范</span><br><span class="line">GRUB_DISABLE_RECOVERY=&quot;true&quot;</span><br><span class="line">GRUB_ENABLE_BLSCFG=true</span><br><span class="line">GRUB_TERMINFO=&quot;terminfo -g 80x24 console&quot;</span><br><span class="line">GRUB_DISABLE_OS_PROBER=true</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>生成启动文件 <code>grub2-mkconfig -o /boot/grub2/grub.cfg</code></li>
+<li>重启虚机 <code>reboot</code></li>
+</ul>
+<p>通过 <code>ip a</code> 查看虚机网卡命名是否生效：<br><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/vf-interface.png" alt="VF-Interface"></p>
+<h2 id="对网卡进行配置"><a href="#对网卡进行配置" class="headerlink" title="对网卡进行配置"></a>对网卡进行配置</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nmcli c add con-name $&#123;C_NAME&#125; type ethernet ifname $&#123;IF_NAME&#125; ipv4.address 172.18.1.67/26</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; ipv4.method static</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; connection.autoconnect yes</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; 802-3-ethernet.mtu 9000</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; ipv6.addr-gen-mode eui64</span><br><span class="line">nmcli c up $&#123;C_NAME&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于之前将 <code>Github</code> 作为图床，怎么说呢，不可控性太多了，今天就用 <code>oss</code> 配置了下，后面迁移啥的也比较方便，还是专业的产品做专业的事情吧。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com">kirago</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com/archives/c882714e.html">http://kiragoo.github.com/archives/c882714e.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kiragoo.github.com" target="_blank">kirago杂谈</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a><a class="post-meta__tags" href="/tags/Network/">Network</a></div><div class="post_share"><div class="social-share" data-image="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/gh/overtrue/share.js@master/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/archives/4df09d70.html"><img class="next-cover" src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/release-1.1.6.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">kubebuilder 去 kube-rbac-proxy 体验</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/config/avatar.jpeg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">kirago</div><div class="author-info__description">勿以浮沙筑高台</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">39</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kiragoo" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:zhangl910201@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SR-IOV-VF-%E7%BD%91%E5%8D%A1%E5%91%BD%E5%90%8D%E9%97%AE%E9%A2%98%E7%AE%80%E5%8D%95%E8%AE%B0%E5%BD%95%E4%B8%8B"><span class="toc-number">1.</span> <span class="toc-text">SR-IOV VF 网卡命名问题简单记录下</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E4%B8%9A%E5%8A%A1%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0%E5%AF%B9%E5%BA%94%E7%BD%91%E5%8D%A1%E5%8F%8A-Slot-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">通过业务脚本实现对应网卡及 Slot 配置文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E7%BD%91%E5%8D%A1%E8%BF%9B%E8%A1%8C%E9%85%8D%E7%BD%AE"><span class="toc-number">1.2.</span> <span class="toc-text">对网卡进行配置</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/archives/c882714e.html" title="SR-IOV VF 网卡命名问题记录"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="SR-IOV VF 网卡命名问题记录"/></a><div class="content"><a class="title" href="/archives/c882714e.html" title="SR-IOV VF 网卡命名问题记录">SR-IOV VF 网卡命名问题记录</a><time datetime="2023-04-03T09:05:37.000Z" title="发表于 2023-04-03 17:05:37">2023-04-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/4df09d70.html" title="kubebuilder 去 kube-rbac-proxy 体验"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/release-1.1.6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kubebuilder 去 kube-rbac-proxy 体验"/></a><div class="content"><a class="title" href="/archives/4df09d70.html" title="kubebuilder 去 kube-rbac-proxy 体验">kubebuilder 去 kube-rbac-proxy 体验</a><time datetime="2022-04-26T10:12:36.000Z" title="发表于 2022-04-26 18:12:36">2022-04-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/a459e2be.html" title="通过 OPA 运行 Kubernetes Pod Security Policy"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="通过 OPA 运行 Kubernetes Pod Security Policy"/></a><div class="content"><a class="title" href="/archives/a459e2be.html" title="通过 OPA 运行 Kubernetes Pod Security Policy">通过 OPA 运行 Kubernetes Pod Security Policy</a><time datetime="2022-04-26T04:15:05.000Z" title="发表于 2022-04-26 12:15:05">2022-04-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/217459e6.html" title="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS"/></a><div class="content"><a class="title" href="/archives/217459e6.html" title="USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS">USING KUBE-RBAC-PROXY TO SECURE KUBERNETES WORKLOADS</a><time datetime="2022-04-25T13:21:12.000Z" title="发表于 2022-04-25 21:21:12">2022-04-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/act-devops.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="利用 nektos/act debug github action locally"/></a><div class="content"><a class="title" href="/archives/7c305169.html" title="利用 nektos/act debug github action locally">利用 nektos/act debug github action locally</a><time datetime="2022-04-06T14:35:37.000Z" title="发表于 2022-04-06 22:35:37">2022-04-06</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By kirago</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

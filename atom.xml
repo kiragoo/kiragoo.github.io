@@ -6,7 +6,7 @@
   <link href="http://kiragoo.github.com/atom.xml" rel="self"/>
   
   <link href="http://kiragoo.github.com/"/>
-  <updated>2023-04-03T08:26:55.906Z</updated>
+  <updated>2023-04-03T09:31:18.194Z</updated>
   <id>http://kiragoo.github.com/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SR-IOV VF 网卡命名问题记录</title>
+    <link href="http://kiragoo.github.com/archives/c882714e.html"/>
+    <id>http://kiragoo.github.com/archives/c882714e.html</id>
+    <published>2023-04-03T09:05:37.000Z</published>
+    <updated>2023-04-03T09:31:18.194Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="SR-IOV-VF-网卡命名问题简单记录下"><a href="#SR-IOV-VF-网卡命名问题简单记录下" class="headerlink" title="SR-IOV VF 网卡命名问题简单记录下"></a>SR-IOV VF 网卡命名问题简单记录下</h1><p>最近工作项目中通过 <code>KVM</code> + <code>SR-IOV VF</code> 来构建虚拟网关节点，在资源实施规划部署时需要对每个网络平面的网卡进行统一化的命名，具体形如<br><code>Domain Node Name</code> 和 <code>Admin Node Name</code> 网卡都有统一的命名规范。</p><h2 id="通过业务脚本实现对应网卡及-Slot-配置文件"><a href="#通过业务脚本实现对应网卡及-Slot-配置文件" class="headerlink" title="通过业务脚本实现对应网卡及 Slot 配置文件"></a>通过业务脚本实现对应网卡及 <code>Slot</code> 配置文件</h2><p>通过 <code>virsh</code> atach 网卡。eg:</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">virsh attach-device <span class="variable">$&#123;NODE_NAME&#125;</span> <span class="variable">$&#123;XML_CONFIG&#125;</span> --config</span><br></pre></td></tr></table></figure><p>为了保证生效识别到，最好通过 <code>virsh shutdown $&#123;NODE_NAME&#125;</code> 及 <code>virsh start $&#123;NODE_NAME&#125;</code> 来拉起网卡。<br>由于时间问题，具体的环境已经没有这里就不做贴图了。</p><p>这个时候通过 <code>ip a</code> 能够发现识别到网卡，此时借鉴如下 <img src="https://www.thegeekdiary.com/how-to-set-a-custom-interface-name-with-networkmanager-in-centos-rhel-7/" alt="How to Set a custom Interface Name With NetworkManager in Centos/RHEL 7"> 都不行。</p><p>通过自己的理解和调研，其实以上介绍的就是通过对  <code>/etc/udev/rules.d</code> 进行命名配置让 <code>kennel</code> 在系统启动引导阶段进行网卡重命名。</p><p>后面通过另外一种方式绕了一层：</p><ul><li>首先对原有 <code>/etc/default/grub</code> 配置文件进行配置， <code>mv /etc/default/grub /etc/default/grub.bak</code></li><li>配置 <code>/etc/default/grub</code> 内容：</li></ul><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GRUB_TIMEOUT=5</span><br><span class="line">GRUB_DISTRIBUTOR=&quot;$(sed &#x27;s, release .*$,,g&#x27; /etc/system-release)&quot;</span><br><span class="line">GRUB_DEFAULT=saved</span><br><span class="line">GRUB_DISABLE_SUBMENU=true</span><br><span class="line">GRUB_TERMINAL_OUTPUT=&quot;ofconsole&quot;</span><br><span class="line">GRUB_CMDLINE_LINUX=&quot;crashkernel=auto rd.lvm.lv=cl/root rd.lvm.lv=cl/swap net.ifnames=0 rhgb quiet&quot;  &gt;&gt; 添加 net.ifnames=0 重新生成网卡命名配置规范</span><br><span class="line">GRUB_DISABLE_RECOVERY=&quot;true&quot;</span><br><span class="line">GRUB_ENABLE_BLSCFG=true</span><br><span class="line">GRUB_TERMINFO=&quot;terminfo -g 80x24 console&quot;</span><br><span class="line">GRUB_DISABLE_OS_PROBER=true</span><br></pre></td></tr></table></figure><ul><li>生成启动文件 <code>grub2-mkconfig -o /boot/grub2/grub.cfg</code></li><li>重启虚机 <code>reboot</code></li></ul><p>通过 <code>ip a</code> 查看虚机网卡命名是否生效：<br><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/vf-interface.png" alt="VF-Interface"></p><h2 id="对网卡进行配置"><a href="#对网卡进行配置" class="headerlink" title="对网卡进行配置"></a>对网卡进行配置</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nmcli c add con-name $&#123;C_NAME&#125; type ethernet ifname $&#123;IF_NAME&#125; ipv4.address 172.18.1.67/26</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; ipv4.method static</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; connection.autoconnect yes</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; 802-3-ethernet.mtu 9000</span><br><span class="line">nmcli c mod $&#123;C_NAME&#125; ipv6.addr-gen-mode eui64</span><br><span class="line">nmcli c up $&#123;C_NAME&#125;</span><br></pre></td></tr></table></figure><p>由于之前将 <code>Github</code> 作为图床，怎么说呢，不可控性太多了，今天就用 <code>oss</code> 配置了下，后面迁移啥的也比较方便，还是专业的产品做专业的事情吧。</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h1 id=&quot;SR-IOV-VF-网卡命名问题简单记录下&quot;&gt;&lt;a href=&quot;#SR-IOV-VF-网卡命名问题简单记录下&quot; class=&quot;headerlink&quot; title=&quot;SR-IOV VF 网卡命名问题简单记录下&quot;&gt;&lt;/a&gt;SR-IOV VF 网卡命名问题简单记录下&lt;/</summary>
+      
+    
+    
+    
+    <category term="Linux" scheme="http://kiragoo.github.com/categories/Linux/"/>
+    
+    
+    <category term="Linux" scheme="http://kiragoo.github.com/tags/Linux/"/>
+    
+    <category term="Network" scheme="http://kiragoo.github.com/tags/Network/"/>
+    
+  </entry>
   
   <entry>
     <title>kubebuilder 去 kube-rbac-proxy 体验</title>
@@ -546,34 +572,6 @@
       
       
     <summary type="html">&lt;p&gt;通过前几篇章节，初步认识了通过 &lt;code&gt;RestTemplate&lt;/code&gt; 调用微服务拆分的服务的 &lt;code&gt;rest&lt;/code&gt; 请求，进一步引入了通过 &lt;code&gt;Eureka&lt;/code&gt; 来实现服务注册于发现（此部分的拓展内容其实还有很多，牵扯到自定义元</summary>
-      
-    
-    
-    
-    <category term="spring cloud" scheme="http://kiragoo.github.com/categories/spring-cloud/"/>
-    
-    <category term="java" scheme="http://kiragoo.github.com/categories/spring-cloud/java/"/>
-    
-    
-    <category term="java" scheme="http://kiragoo.github.com/tags/java/"/>
-    
-    <category term="spring cloud" scheme="http://kiragoo.github.com/tags/spring-cloud/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Spring Cloud 系列之服务注册与发现（三）</title>
-    <link href="http://kiragoo.github.com/archives/a1a3f20a.html"/>
-    <id>http://kiragoo.github.com/archives/a1a3f20a.html</id>
-    <published>2021-05-03T09:32:01.000Z</published>
-    <updated>2023-04-03T08:26:56.200Z</updated>
-    
-    <content type="html"><![CDATA[<p>鉴于上篇内容提出的思考拓展部分，此部门其实就是做了 application.yaml 的配置文件的更改。此篇的 Demo 通过单节点多端口来模拟多节点分布的 Eureka Server HA 集群。由于篇幅比较简单，我就直接将 microservice-discovery-eureka 做了 yaml 配置文件更改最终输出为 microservice-discovery-eureka-ha 的模块，就暂且不实现生产者服务和消费者服务了。</p><hr><h1 id="Eureka-Server-HA"><a href="#Eureka-Server-HA" class="headerlink" title="Eureka Server HA"></a><code>Eureka Server HA</code></h1><h2 id="microservice-discovery-eureka-ha"><a href="#microservice-discovery-eureka-ha" class="headerlink" title="microservice-discovery-eureka-ha"></a><code>microservice-discovery-eureka-ha</code></h2><ul><li><p><code>application.yaml</code> 文件如下:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    name: microserver-discovery-eureka-ha</span><br><span class="line">#eureka:</span><br><span class="line">#  client:</span><br><span class="line">#    service-url:</span><br><span class="line">#      defaultZone: http:&#x2F;&#x2F;peer1:8001&#x2F;eureka&#x2F;,http:&#x2F;&#x2F;peer2:8002&#x2F;eureka&#x2F;</span><br><span class="line">---</span><br><span class="line">spring:</span><br><span class="line">  profiles: peer1</span><br><span class="line">server:</span><br><span class="line">  port: 8001</span><br><span class="line">eureka:</span><br><span class="line">  instance:</span><br><span class="line">    hostname: peer1</span><br><span class="line">  client:</span><br><span class="line">    service-url:</span><br><span class="line">      defaultZone: http:&#x2F;&#x2F;peer2:8002&#x2F;eureka&#x2F;</span><br><span class="line">#    fetch-registry: true</span><br><span class="line">#    register-with-eureka: true</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line">spring:</span><br><span class="line">  profiles: peer2</span><br><span class="line">server:</span><br><span class="line">  port: 8002</span><br><span class="line">eureka:</span><br><span class="line">  instance:</span><br><span class="line">    hostname: peer2</span><br><span class="line">  client:</span><br><span class="line">    service-url:</span><br><span class="line">      defaultZone: http:&#x2F;&#x2F;peer1:8001&#x2F;eureka&#x2F;</span><br><span class="line">#    fetch-registry: true</span><br><span class="line">#    register-with-eureka: true</span><br></pre></td></tr></table></figure></li><li><p>配置本地 <code>hosts</code> 文件：</p></li><li><p><em>由于是本地单节点模拟，为了能够解析到 domain 需要加如下配置</em>*</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 peer1</span><br><span class="line"></span><br><span class="line">127.0.0.1 peer2</span><br></pre></td></tr></table></figure></li><li><p> 通过 <code>package</code> 打成 <code>jar</code> 包运行</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java -jar microservice-discovery-eureka-ha&#x2F;target&#x2F;microservice-discovery-eureka-ha-0.0.1-SNAPSHOT.jar --spring.profiles.active&#x3D;peer1</span><br><span class="line">java -jar microservice-discovery-eureka-ha&#x2F;target&#x2F;microservice-discovery-eureka-ha-0.0.1-SNAPSHOT.jar --spring.profiles.active&#x3D;peer2</span><br></pre></td></tr></table></figure></li><li><p>验证<br>成功运行后会嗨皮发现最终页面如下：<br><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/sc3-1.png" alt="sc3-1"><br>当然这是我在浏览器输入 <a href="http://peer1:8001/">http://peer1:8001</a> 得到的输出,然后我们可以通过启动上篇的生产者服务和消费者服务，然后将其中的一个 Eureka Server 宕掉，发现服务还是可用的，即完成了验证。</p></li></ul><blockquote><p><a href="https://github.com/Tonyzhangl/spring-cloud-demo/tree/master/chapter2-2">示例代码链接</a></p></blockquote>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;p&gt;鉴于上篇内容提出的思考拓展部分，此部门其实就是做了 application.yaml 的配置文件的更改。此篇的 Demo 通过单节点多端口来模拟多节点分布的 Eureka Server HA 集群。由于篇幅比较简单，我就直接将 microservice-discovery-</summary>
       
     
     
