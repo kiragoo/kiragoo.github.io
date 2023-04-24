@@ -1,0 +1,585 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>OCI Image Format Spec 解读 | kirago杂谈</title><meta name="keywords" content="OCI,Container"><meta name="author" content="kirago"><meta name="copyright" content="kirago"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在 OCI 标准中，为描述 OCI Image规范包含了 image manifest,image index(optional),filesystem layers集合以及 configuration配置。通过如上描述使得对于 image 在异构场景下能够被构建、传输且可执行变的通用化。 站在上层应用的视角， image manifest 包含内容可寻址且解压可运行的filesystem lay">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OCI Image Format Spec 解读">
+<meta property="og:url" content="http://kiragoo.github.com/archives/16cb3562.html">
+<meta property="og:site_name" content="kirago杂谈">
+<meta property="og:description" content="在 OCI 标准中，为描述 OCI Image规范包含了 image manifest,image index(optional),filesystem layers集合以及 configuration配置。通过如上描述使得对于 image 在异构场景下能够被构建、传输且可执行变的通用化。 站在上层应用的视角， image manifest 包含内容可寻址且解压可运行的filesystem lay">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg">
+<meta property="article:published_time" content="2023-04-24T02:03:14.000Z">
+<meta property="article:modified_time" content="2023-04-24T09:43:06.768Z">
+<meta property="article:author" content="kirago">
+<meta property="article:tag" content="OCI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://kiragoo.github.com/archives/16cb3562"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OCI Image Format Spec 解读',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-04-24 17:43:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="kirago杂谈" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/config/avatar.jpeg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">34</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">kirago杂谈</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 娱乐</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">OCI Image Format Spec 解读</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-04-24T02:03:14.000Z" title="发表于 2023-04-24 10:03:14">2023-04-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-04-24T09:43:06.768Z" title="更新于 2023-04-24 17:43:06">2023-04-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Container/">Container</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="OCI Image Format Spec 解读"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>在 <code>OCI</code> 标准中，为描述 <code>OCI Image</code>规范包含了 <code>image manifest</code>,<code>image index</code>(optional),<code>filesystem layers</code>集合以及 <code>configuration</code>配置。通过如上描述使得对于 <code>image</code> 在异构场景下能够被构建、传输且可执行变的通用化。</p>
+<p>站在上层应用的视角， <code>image manifest</code> 包含内容可寻址且解压可运行的<code>filesystem layer</code>。而 <code>image configuration</code> 包含例如应用参数、环境变量等。<br><code>image index</code> 则是对系列 <code>manifest</code> 和 <code>descriptors</code> 的描述指向，用于对不同镜像的补充，一般来说是对不同架构或者不同属性的描述。</p>
+<p><img src="https://github.com/opencontainers/image-spec/raw/main/img/build-diagram.png" alt="OCI-Overview"></p>
+<h2 id="Specification-解读"><a href="#Specification-解读" class="headerlink" title="Specification 解读"></a><code>Specification</code> 解读</h2><h3 id="OCI-Image-Media-Types"><a href="#OCI-Image-Media-Types" class="headerlink" title="OCI Image Media Types"></a><code>OCI Image Media Types</code></h3><p><code>OCI Image Media Types</code> 定义了如下的格式：</p>
+<ul>
+<li><code>application/vnd.oci.descriptor.v1+json</code>: <code>Content Descriptor</code></li>
+<li><code>application/vnd.oci.layout.header.v1+json</code>: <code>OCI Layout</code></li>
+<li><code>application/vnd.oci.image.index.v1+json</code>: <code>Image Index</code></li>
+<li><code>application/vnd.oci.image.manifest.v1+json</code>: <code>Image manifest</code></li>
+<li><code>application/vnd.oci.image.config.v1+json</code>: <code>Image config</code></li>
+<li><code>application/vnd.oci.image.layer.v1.tar</code>: <code>&quot;Layer&quot;</code>, 以 <code>tar</code> 方式压缩</li>
+<li><code>application/vnd.oci.image.layer.v1.tar+gzip</code>: <code>&quot;Layer&quot;</code>, 以 <code>gzip</code> 方式压缩</li>
+<li><code>application/vnd.oci.image.layer.v1.tar+zstd</code>: <code>&quot;Layer&quot;</code>, 以 <code>zstd</code> 方式压缩</li>
+<li><code>application/vnd.oci.scratch.v1+json</code>: <code>Scratch blob</code></li>
+<li><code>application/vnd.oci.artifact.manifest.v1+json</code>: <code>Artifact manifest</code></li>
+</ul>
+<p>而如下 <code>media types</code> 将被剔除且不建议在未来的版本中使用:</p>
+<ul>
+<li><code>application/vnd.oci.image.layer.nondistributable.v1.tar</code></li>
+<li><code>application/vnd.oci.image.layer.nondistributable.v1.tar+gzip</code></li>
+<li><code>application/vnd.oci.image.layer.nondistributable.v1.tar+zstd</code></li>
+</ul>
+<p>对于 <code>media type</code> 的明细配置矩阵可以参考 <a target="_blank" rel="noopener" href="https://github.com/opencontainers/image-spec/blob/main/media-types.md#compatibility-matrix"><code>Compatibility Matrix</code></a>。</p>
+<h4 id="各-Media-Type-关联关系"><a href="#各-Media-Type-关联关系" class="headerlink" title="各 Media Type 关联关系"></a>各 <code>Media Type</code> 关联关系</h4><p><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/media-types.png" alt="media type reference"></p>
+<p>通过 <code>Descriptors</code> 描述其中关联关系。其中 <code>image-index</code> 可以理解为是 **<code>fat-manifest</code>**，是对目标架构平台的 <code>image manifests</code>的关联描述入口。其中 <code>image manifest</code> 则是对具体 <code>image configuration</code> 和众多 <code>layers</code> 的描述关联入口。</p>
+<h2 id="spec-中上层组件描述"><a href="#spec-中上层组件描述" class="headerlink" title="spec 中上层组件描述"></a><code>spec</code> 中上层组件描述</h2><h3 id="Image-Manifest"><a href="#Image-Manifest" class="headerlink" title="Image Manifest"></a><code>Image Manifest</code></h3><p>构建容器镜像的一种文档描述，其作用有如下三点：</p>
+<ol>
+<li>用于构建可内容寻址的镜像，镜像模型中包含可哈希获取镜像配置及其组件</li>
+<li>通过 <strong><code>fat-manifest</code></strong> 来维护各异构平台支持的镜像</li>
+<li>可转换位 <code>OCI</code> 运行时规范</li>
+</ol>
+<h4 id="属性介绍"><a href="#属性介绍" class="headerlink" title="属性介绍"></a>属性介绍</h4><p><code>image index</code> 主要是一系列架构平台的信息描述，而 <code>image manifest</code> 则是维护具体镜像配置，以及在具体 <code>operating system</code> 的镜像的系列 <code>layers</code> 的信息。</p>
+<ul>
+<li><code>shcemaVersion</code> | <em>int</em> | REQUIRED</li>
+<li><code>mediaType</code> | <em>string</em> | REQUIRED</li>
+<li><code>artifactType</code> | <em>string</em> | OPTIONAL</li>
+<li><code>config</code> | <em><code>descriptor</code></em> | REQUIRED<ul>
+<li><code>mediaType</code> | <em>string</em></li>
+</ul>
+</li>
+<li><code>layers</code> | <em>array of objects</em><br>其中元素必须是 <code>descriptor</code>，且必须拥有一个入口 entry。</li>
+<li><code>subject</code> | <em><code>descriptor</code></em> | OPTIONAL</li>
+<li><code>annotation</code> | <em>string-string-map</em> | OPTIONAL</li>
+</ul>
+<h4 id="Image-Manifest-示例"><a href="#Image-Manifest-示例" class="headerlink" title="Image Manifest 示例"></a><code>Image Manifest</code> 示例</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;config&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.config.v1+json&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;size&quot;</span>: <span class="number">7023</span>,</span><br><span class="line">    <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:b5b2b2c507a0944348e0303114d8d93aaaa081732b86451d9bce1f432a537bc7&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">&quot;layers&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">32654</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:9834876dcfb05cb167a5c24953eba58c4ac89b1adf57f28f2f9d09af107ee8f0&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">16724</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:3c3a4604a545cdc127456d94e421cd355bca5b528f4a9c1905b15da2eb4a4c6b&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">73109</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:ec4b8955958665577945c89419d1af06b5f7636b4ac3da7f12184802ad867736&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;subject&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;size&quot;</span>: <span class="number">7682</span>,</span><br><span class="line">    <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;com.example.key1&quot;</span>: <span class="string">&quot;value1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;com.example.key2&quot;</span>: <span class="string">&quot;value2&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>**Note: <code>mediaType</code> 必须与所包含的 <code>digest</code> 相对应，比如当 <code>digest</code> 是通过 <code>ScratchDigestSHA256</code> 生成，那么 media type “必须”  配置为 <code>application/vnd/oci.scratch.v1+json</code>**。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.scratch.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;size&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="OCI-Image-Index-解读"><a href="#OCI-Image-Index-解读" class="headerlink" title="OCI Image Index 解读"></a><code>OCI Image Index</code> 解读</h3><p>image index 的配置设置是作为 image manifests 的上层引用。</p>
+<h4 id="具体属性解读"><a href="#具体属性解读" class="headerlink" title="具体属性解读"></a>具体属性解读</h4><ul>
+<li><code>schemaVersion</code> | <em>int</em> | REQUIRED</li>
+<li><code>mediaType</code> | <em>string</em></li>
+<li><code>manifests</code> | <em>array of objects</em> | REQUIRED<br><code>manifests</code> 包含系列 带有如下属性的<code>descriptor properties</code></li>
+<li><code>mediaType</code> | <em>string</em></li>
+<li><code>platform</code> | <em>obeject</em> | OPTIONAL<br> 当具体 <code>platform</code> 被提供时，需要进行如下运行时资源声明<ul>
+<li><code>architecture</code> | <em>string</em> | REQUIRED</li>
+<li><code>os</code> | <em>string</em> | REQUIRED</li>
+<li><code>os.version</code> | <em>string</em> | OPTIONAL</li>
+<li><code>os.features</code> | <em>array of strings</em> | OPTIONAL</li>
+<li><code>variant</code> | <em>string</em> | OPTIONAL</li>
+<li><code>features</code> | <em>array of strings</em></li>
+</ul>
+</li>
+<li><code>annotations</code> | <em>string-string-map</em> | OPTIONAL</li>
+</ul>
+<h4 id="Platform-Variants"><a href="#Platform-Variants" class="headerlink" title="Platform Variants"></a><code>Platform Variants</code></h4><table>
+<thead>
+<tr>
+<th>ISA/ABI</th>
+<th>architecture</th>
+<th>variant</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ARM</td>
+<td>32-bit, v6</td>
+<td>arm</td>
+</tr>
+<tr>
+<td>ARM</td>
+<td>32-bit, v7</td>
+<td>arm</td>
+</tr>
+<tr>
+<td>ARM</td>
+<td>32-bit, v8</td>
+<td>arm</td>
+</tr>
+<tr>
+<td>ARM</td>
+<td>64-bit, v8</td>
+<td>arm64</td>
+</tr>
+</tbody></table>
+<h4 id="OCI-Image-Index-示例"><a href="#OCI-Image-Index-示例" class="headerlink" title="OCI Image Index 示例"></a><code>OCI Image Index</code> 示例</h4><ul>
+<li>simple image index with two platforms</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.index.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;manifests&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:e692418e4cbaf90ca69d05a66403747baa33ee08806650b51fab815ad7fc331f&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;platform&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;ppc64le&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7682</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;platform&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;amd64&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;com.example.key1&quot;</span>: <span class="string">&quot;value1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;com.example.key2&quot;</span>: <span class="string">&quot;value2&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>image index with multiple media types</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.index.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;manifests&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:e692418e4cbaf90ca69d05a66403747baa33ee08806650b51fab815ad7fc331f&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;platform&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;ppc64le&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.index.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7682</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:601570aaff1b68a61eb9c85b8beca1644e698003e0cdb5bce960f193d265a8b7&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;com.example.key1&quot;</span>: <span class="string">&quot;value1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;com.example.key2&quot;</span>: <span class="string">&quot;value2&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="OCI-Image-Layout-Specification-解读"><a href="#OCI-Image-Layout-Specification-解读" class="headerlink" title="OCI Image Layout Specification 解读"></a>OCI Image Layout Specification 解读</h3><p>通过 image layout 及 ref 即可构建一个 OCI Runtime Specification bundle：</p>
+<ul>
+<li>通过 image index 查询 manifest</li>
+<li>通过定义的 layers 使用 filesystem layers</li>
+<li>通过 <code>image-confing.json</code> 转换为 OCI Runtime Specification</li>
+</ul>
+<h4 id="内容解读"><a href="#内容解读" class="headerlink" title="内容解读"></a>内容解读</h4><p>image layout 包含如下内容：</p>
+<ul>
+<li><code>blogs</code> 目录：<ul>
+<li>content-addressable blobs</li>
+<li>blog has no schema</li>
+<li>目录必须存在但可能为空</li>
+</ul>
+</li>
+<li><code>oci-layout</code> 文件<ul>
+<li>必须存在</li>
+<li>必须为 JSON 对象</li>
+<li>必须包含 <code>imageLayoutVersion</code> 字段</li>
+<li>可能还包含其他字段</li>
+</ul>
+</li>
+<li><code>index.json</code> 文件<ul>
+<li>必须存在</li>
+<li>必须为 image index 对象</li>
+</ul>
+</li>
+</ul>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> example.com/app/</span><br><span class="line">$ find . -<span class="built_in">type</span> f</span><br><span class="line">./index.json</span><br><span class="line">./oci-layout</span><br><span class="line">./blobs/sha256/3588d02542238316759cbf24502f4344ffcc8a60c803870022f335d1390c13b4</span><br><span class="line">./blobs/sha256/4b0bc1c4050b03c95ef2a8e36e25feac42fd31283e8c30b3ee5df6b043155d3c</span><br><span class="line">./blobs/sha256/7968321274dc6b6171697c33df7815310468e694ac5be0ec03ff053bb135e768</span><br></pre></td></tr></table></figure>
+
+<h4 id="Blogs-解读"><a href="#Blogs-解读" class="headerlink" title="Blogs 解读"></a>Blogs 解读</h4><ul>
+<li><code>blogs</code> 的目录中包含由SHA算法生成的各个包含实际内容的子目录组织而成。</li>
+<li><code>blog/&lt;alg&gt;/&lt;encoded&gt;</code>必须与 <code>digest &lt;alg&gt;:&lt;encoded&gt;</code> 相匹配，比如 content <code>blobs/sha256/da39a3ee5e6b4b0d3255bfef95601890afd80709</code> 必须与 digest <code>sha256:da39a3ee5e6b4b0d3255bfef95601890afd80709</code> 相匹配.</li>
+</ul>
+<h5 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h5><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ cat ./blobs/sha256/9b97579de92b1c195b85bb42a11011378ee549b02d7fe9c17bf2a6b35d5cb079 | jq</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;manifests&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:afff3924849e458c5ef237db5f89539274d5e609db5db935ed3959c90f1f2d51&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;platform&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;ppc64le&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ cat ./blobs/sha256/afff3924849e458c5ef237db5f89539274d5e609db5db935ed3959c90f1f2d51 | jq</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;config&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.config.v1+json&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;size&quot;</span>: <span class="number">7023</span>,</span><br><span class="line">    <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">&quot;layers&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">32654</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:9834876dcfb05cb167a5c24953eba58c4ac89b1adf57f28f2f9d09af107ee8f0&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">$ cat ./blobs/sha256/5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270 | jq</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;amd64&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;author&quot;</span>: <span class="string">&quot;Alyssa P. Hacker &lt;alyspdev@example.com&gt;&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;config&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;Hostname&quot;</span>: <span class="string">&quot;8dfe43d80430&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;Domainname&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;User&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;AttachStdin&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;AttachStdout&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;AttachStderr&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;Tty&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;OpenStdin&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;StdinOnce&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">&quot;Env&quot;</span>: [</span><br><span class="line">      <span class="string">&quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&quot;</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">&quot;Cmd&quot;</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">&quot;Image&quot;</span>: <span class="string">&quot;sha256:6986ae504bbf843512d680cc959484452034965db15f75ee8bdd1b107f61500b&quot;</span>,</span><br><span class="line">...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="oci-layout-file"><a href="#oci-layout-file" class="headerlink" title="oci-layout file"></a>oci-layout file</h4><h5 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h5><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;imageLayoutVersion&quot;</span>: <span class="string">&quot;1.0.0&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="index-json-file"><a href="#index-json-file" class="headerlink" title="index.json file"></a>index.json file</h4><h5 id="示例-3"><a href="#示例-3" class="headerlink" title="示例"></a>示例</h5><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;schemaVersion&quot;</span>: <span class="number">2</span>,</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.index.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;manifests&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.index.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:0228f90e926ba6b96e4f39cf294b2586d38fbb5a1e385c05cd1ee40ea54fe7fd&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;org.opencontainers.image.ref.name&quot;</span>: <span class="string">&quot;stable-release&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:e692418e4cbaf90ca69d05a66403747baa33ee08806650b51fab815ad7fc331f&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;platform&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;ppc64le&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;org.opencontainers.image.ref.name&quot;</span>: <span class="string">&quot;v1.0&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/xml&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">7143</span>,</span><br><span class="line">      <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:b3d63d132d21c3ff4c35a061adf23cf43da8ae054247e32faa95494d904a007e&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;org.freedesktop.specifications.metainfo.version&quot;</span>: <span class="string">&quot;1.0&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;org.freedesktop.specifications.metainfo.type&quot;</span>: <span class="string">&quot;AppStream&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;annotations&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;com.example.index.revision&quot;</span>: <span class="string">&quot;r124356&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Image-Layer-Filesystem-Changeset"><a href="#Image-Layer-Filesystem-Changeset" class="headerlink" title="Image Layer Filesystem Changeset"></a>Image Layer Filesystem Changeset</h3><h4 id="gzip-Media-Types"><a href="#gzip-Media-Types" class="headerlink" title="+gzip Media Types"></a>+gzip Media Types</h4><ul>
+<li><code>application/vnd.oci.image.layer.v1.tar+gzip</code></li>
+<li><code>application/vnd.oci.image.layer.nondistributable.v1.tar+gzip</code></li>
+</ul>
+<h4 id="zstd-Media-Types"><a href="#zstd-Media-Types" class="headerlink" title="+zstd Media Types"></a>+zstd Media Types</h4><ul>
+<li><code>application/vnd.oci.image.layer.v1.tar+zstd</code></li>
+<li><code>application/vnd.oci.image.layer.nondistributable.v1.tar</code></li>
+</ul>
+<h4 id="Change-Types"><a href="#Change-Types" class="headerlink" title="Change Types"></a>Change Types</h4><p>changes 类型：</p>
+<ul>
+<li>Additions</li>
+<li>Modifications</li>
+<li>Removals</li>
+</ul>
+<p>其中 Additions 和 Modifications 在改变集中是相同的表现，而 Removals 则通过 “whiteout” 标识。</p>
+<h4 id="File-Types"><a href="#File-Types" class="headerlink" title="File Types"></a>File Types</h4><ul>
+<li>regular files</li>
+<li>directories</li>
+<li>sockets</li>
+<li>symbolic links</li>
+<li>block devices</li>
+<li>character devices</li>
+<li>FIFOs</li>
+</ul>
+<h4 id="File-Attributes"><a href="#File-Attributes" class="headerlink" title="File Attributes"></a>File Attributes</h4><p>Additions 和 Modifications 必须包含额属性：</p>
+<ul>
+<li>Modification Time(<code>mtime</code>)</li>
+<li>User ID(<code>uid</code>)<ul>
+<li>User Name(<code>uname</code>)</li>
+</ul>
+</li>
+<li>Group ID(<code>gid</code>)<ul>
+<li>Group Name(<code>gname</code>)</li>
+</ul>
+</li>
+<li>Mode(<code>mode</code>)</li>
+<li>Extended Attributes(<code>xattrs</code>)</li>
+<li>Symlink reference(<code>linkname</code> + symbolic link type)</li>
+<li>Hardlink reference(<code>linkname</code>)</li>
+</ul>
+<h4 id="Creating"><a href="#Creating" class="headerlink" title="Creating"></a>Creating</h4><h4 id="Initial-Root-Filesystem"><a href="#Initial-Root-Filesystem" class="headerlink" title="Initial Root Filesystem"></a>Initial Root Filesystem</h4><p>initial root 作为基础或者父 layer。如下示例只是为了配合演示，其中的 root filesystem 只是一个初始化状态，为一个空目录。<br><code>rootfs_c9d_v1/</code></p>
+<h4 id="Populate-Initial-Filesystem"><a href="#Populate-Initial-Filesystem" class="headerlink" title="Populate Initial Filesystem"></a>Populate Initial Filesystem</h4><p>目录和文件创建：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rootfs-c9d-v1/</span><br><span class="line">    etc/</span><br><span class="line">        my-app-config</span><br><span class="line">    bin/</span><br><span class="line">        my-app-binary</span><br><span class="line">        my-app-tools</span><br></pre></td></tr></table></figure>
+
+<p><code>rootfs-c9d_v1/</code> 归档为 tar 包，包含如下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">./</span><br><span class="line">./etc/</span><br><span class="line">./etc/my-app-config</span><br><span class="line">./bin/</span><br><span class="line">./bin/my-app-binary</span><br><span class="line">./bin/my-app-tools</span><br></pre></td></tr></table></figure>
+
+<h4 id="Populate-a-Comparison-Filesystem"><a href="#Populate-a-Comparison-Filesystem" class="headerlink" title="Populate a Comparison Filesystem"></a>Populate a Comparison Filesystem</h4><p>创建一个新的目录，其中初始化内容为 <code>rootfs-c9d_v1/</code>。能够保留文件属性的示例命令如下：</p>
+<ul>
+<li>cp(1): cp -a rootfs-c9d-v1/ rootfs-c9d-v1.s1/</li>
+<li>rsync(1): rsync -aHAX rootfs-c9d-v1/ rootfs-c9d-v1.s1/</li>
+<li>tar(1): mkdir rootfs-c9d-v1.s1 &amp;&amp; tar –acls –xattrs -C rootfs-c9d-v1/ -c . | tar -C rootfs-c9d-v1.s1/ –acls –xattrs -x (including –selinux where supported)</li>
+</ul>
+<p>对 snapshot 的任何改变都不能改变或影响它所复制的目录。</p>
+<p>如上 <code>rootfs-c9d-v1.s1</code> 作为 <code>rootfs-c9d-v1</code> 一个相同的快照，其将作为更新和改变做好准备。</p>
+<p><strong>Note:</strong> <em>写时复制或者联合文件系统可以高效地处理目录 snapshots</em></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rootfs-c9d-v1.s1/</span><br><span class="line">    etc/</span><br><span class="line">        my-app-config</span><br><span class="line">    bin/</span><br><span class="line">        my-app-binary</span><br><span class="line">        my-app-tools</span><br></pre></td></tr></table></figure>
+
+<p>在此演示中，向 <code>/etc/my-app.d</code> 中添加一个默认的配置文件，同时移除现有的配置文件。另外对 <code>./bin/my-app-tools</code> 的二进制文件做出改变（文件属性或者文件内容）来演示 <code>layout</code> 变化，变化后内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">rootfs-c9d-v1.s1/</span><br><span class="line">    etc/</span><br><span class="line">        my-app.d/</span><br><span class="line">            default.cfg</span><br><span class="line">    bin/</span><br><span class="line">        my-app-binary</span><br><span class="line">        my-app-tools</span><br></pre></td></tr></table></figure>
+
+<h4 id="Determining-Changes"><a href="#Determining-Changes" class="headerlink" title="Determining Changes"></a>Determining Changes</h4><p>当两目录进行比对时，相对路径根目录是顶层目录，查找哪些内容被添加、修改或者删除。</p>
+<p>上述演示比对结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Added:      /etc/my-app.d/</span><br><span class="line">Added:      /etc/my-app.d/default.cfg</span><br><span class="line">Modified:   /bin/my-app-tools</span><br><span class="line">Deleted:    /etc/my-app-config</span><br></pre></td></tr></table></figure>
+
+<h4 id="Representing-Changes"><a href="#Representing-Changes" class="headerlink" title="Representing Changes"></a>Representing Changes</h4><p>tar 归档文件将被创建且其中只会包含更改的文件集</p>
+<p>其中 <code>rootfs-c9d-v1.s1</code> 显示如下:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">./etc/my-app.d/</span><br><span class="line">./etc/my-app.d/default.cfg</span><br><span class="line">./bin/my-app-tools</span><br><span class="line">./etc/.wh.my-app-config</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是当更改集生效的时候需要保证 <code>./etc/my-app-config</code> 已经被删除了，其文件前缀为 <code>.wh.</code>。</p>
+<h3 id="OCI-Image-Configuration"><a href="#OCI-Image-Configuration" class="headerlink" title="OCI Image Configuration"></a>OCI Image Configuration</h3><p>OCI <em>image</em> 是对 root filesystem 变化的有序集合且其中包含相应执行参数，可供容器运行使用。</p>
+<h4 id="关键术语"><a href="#关键术语" class="headerlink" title="关键术语"></a>关键术语</h4><h5 id="Layer"><a href="#Layer" class="headerlink" title="Layer"></a>Layer</h5><ul>
+<li>镜像文件系统由 layers 构成</li>
+<li>每个 layer 对代表一组文件系统的变化，其格式为 tar 包，记录着文件的添加、修改或者删除</li>
+<li>layers 中并不包含配置的元数据，比如环境变量或者参数，这些将作为一个完整镜像时的属性，而不是在每个layer中有体现</li>
+<li>使用基于层的或联合的文件系统，如AUFS，或通过计算文件系统快照的差异，文件系统的变化集可以被用来呈现一系列的image layers，就像它们是一个完整的文件系统</li>
+</ul>
+<h5 id="Image-JSON"><a href="#Image-JSON" class="headerlink" title="Image JSON"></a>Image JSON</h5><ul>
+<li>每个镜像将有一个关联的 JSON 结构体用来描述一些关于镜像的基础信息，如创建日期、作者，同时也可以包含一些运行时的配置例如执行入口、默认参数、网络和volume卷</li>
+<li>JSON 描述包含对每个 layer 加密哈希后的引用，用于对该镜像的历史信息的维护</li>
+<li>JSON 应该是不可变的</li>
+<li>改变的话应该意味着一个新的派生镜像，而不是在原有的镜像上做出改变</li>
+</ul>
+<h5 id="Layer-DiffID"><a href="#Layer-DiffID" class="headerlink" title="Layer DiffID"></a>Layer DiffID</h5><p>layer 的 DiffID 是该层未压缩的 tar 归档的摘要，并以描述符摘要的格式进行序列化。</p>
+<h5 id="Layer-ChainID"><a href="#Layer-ChainID" class="headerlink" title="Layer ChainID"></a>Layer ChainID</h5><p>为方便起见，有时用一个标识符来指代一叠加的 layer 是很有用的。</p>
+<h5 id="ImageID"><a href="#ImageID" class="headerlink" title="ImageID"></a>ImageID</h5><p>每个镜像的的ID是由其配置JSON的SHA256哈希值给出的。</p>
+<h4 id="属性"><a href="#属性" class="headerlink" title="属性"></a>属性</h4><ul>
+<li>created | <em>string</em> | OPTIONAL</li>
+<li>author | <em>string</em> | OPTIONAL</li>
+<li>architecture | <em>string</em> | REQUIRED</li>
+<li>os | <em>string</em> | REQUIRED</li>
+<li>os.version | <em>string</em> | OPTIONAL</li>
+<li>os.features | *array of strings | OPTIONAL</li>
+<li>variant | <em>string</em> | OPTIONAL</li>
+<li>config | <em>object</em> | OPTIONAL<ul>
+<li>User | <em>string</em> | OPTIONAL</li>
+<li>ExposedPorts | <em>object</em> | OPTIONAL</li>
+<li>Env | <em>array of strings</em> | OPTIONAL</li>
+<li>Entrypoint | <em>array of strings</em> | OPTIONAL</li>
+<li>Cmd | <em>array of strings</em> | OPTIONAL</li>
+<li>Volume | <em>object</em> | OPTIONAL</li>
+<li>WorkingDir | <em>string</em> | OPTIONAL</li>
+<li>Labels | <em>object</em> | OPTIONAL</li>
+<li>StopSignal | <em>string</em> | OPTIONAL</li>
+<li>Memory | <em>integer</em> | OPTIONAL</li>
+<li>CpuShares | <em>integer</em> | OPTIONAL</li>
+<li>Healthcheck | <em>object</em> | OPTIONAL</li>
+</ul>
+</li>
+<li>rootfs | <em>object</em> | REQUIRED<ul>
+<li>created | <em>string</em> | OPTIONAL</li>
+<li>author | <em>string</em> | OPTIONAL</li>
+<li>created_by | <em>string</em> | OPTIONAL</li>
+<li>comment | <em>string</em> | OPTIONAL</li>
+<li>empty_layer | <em>boolean</em> | OPTIONAL</li>
+</ul>
+</li>
+</ul>
+<h4 id="示例-4"><a href="#示例-4" class="headerlink" title="示例"></a>示例</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;created&quot;</span>: <span class="string">&quot;2015-10-31T22:22:56.015925234Z&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;author&quot;</span>: <span class="string">&quot;Alyssa P. Hacker &lt;alyspdev@example.com&gt;&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;architecture&quot;</span>: <span class="string">&quot;amd64&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;os&quot;</span>: <span class="string">&quot;linux&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;config&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;User&quot;</span>: <span class="string">&quot;alice&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;ExposedPorts&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;8080/tcp&quot;</span>: &#123;&#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;Env&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&quot;</span>,</span><br><span class="line">            <span class="string">&quot;FOO=oci_is_a&quot;</span>,</span><br><span class="line">            <span class="string">&quot;BAR=well_written_spec&quot;</span></span><br><span class="line">        ],</span><br><span class="line">        <span class="attr">&quot;Entrypoint&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;/bin/my-app-binary&quot;</span></span><br><span class="line">        ],</span><br><span class="line">        <span class="attr">&quot;Cmd&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;--foreground&quot;</span>,</span><br><span class="line">            <span class="string">&quot;--config&quot;</span>,</span><br><span class="line">            <span class="string">&quot;/etc/my-app.d/default.cfg&quot;</span></span><br><span class="line">        ],</span><br><span class="line">        <span class="attr">&quot;Volumes&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;/var/job-result-data&quot;</span>: &#123;&#125;,</span><br><span class="line">            <span class="attr">&quot;/var/log/my-app-logs&quot;</span>: &#123;&#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;WorkingDir&quot;</span>: <span class="string">&quot;/home/alice&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;Labels&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;com.example.project.git.url&quot;</span>: <span class="string">&quot;https://example.com/project.git&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;com.example.project.git.commit&quot;</span>: <span class="string">&quot;45a939b2999782a3f005621a8d0f29aa387e1d6b&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;rootfs&quot;</span>: &#123;</span><br><span class="line">      <span class="attr">&quot;diff_ids&quot;</span>: [</span><br><span class="line">        <span class="string">&quot;sha256:c6f988f4874bb0add23a778f753c65efe992244e148a1d2ec2a8b664fb66bbd1&quot;</span>,</span><br><span class="line">        <span class="string">&quot;sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef&quot;</span></span><br><span class="line">      ],</span><br><span class="line">      <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;layers&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;history&quot;</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">&quot;created&quot;</span>: <span class="string">&quot;2015-10-31T22:22:54.690851953Z&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;created_by&quot;</span>: <span class="string">&quot;/bin/sh -c #(nop) ADD file:a3bc1e842b69636f9df5256c49c5374fb4eef1e281fe3f282c65fb853ee171c5 in /&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">&quot;created&quot;</span>: <span class="string">&quot;2015-10-31T22:22:55.613815829Z&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;created_by&quot;</span>: <span class="string">&quot;/bin/sh -c #(nop) CMD [\&quot;sh\&quot;]&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;empty_layer&quot;</span>: <span class="literal">true</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">&quot;created&quot;</span>: <span class="string">&quot;2015-10-31T22:22:56.329850019Z&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;created_by&quot;</span>: <span class="string">&quot;/bin/sh -c apk add curl&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Conversion-to-OCI-Runtime-Configuration"><a href="#Conversion-to-OCI-Runtime-Configuration" class="headerlink" title="Conversion to OCI Runtime Configuration"></a>Conversion to OCI Runtime Configuration</h3><ul>
+<li>从 filesystem layers 提取 root filesystem</li>
+<li>将 image configuration blob 转换为 OCI Runtime configuration blob</li>
+</ul>
+<h4 id="属性比对表"><a href="#属性比对表" class="headerlink" title="属性比对表"></a>属性比对表</h4><table>
+<thead>
+<tr>
+<th>Image Field</th>
+<th>Runtime Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Config.WorkingDir</td>
+<td>process.cwd</td>
+<td></td>
+</tr>
+<tr>
+<td>Config.Env</td>
+<td>process.env</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Config.Entrypoint</td>
+<td>process.args</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Config.Cmd</td>
+<td>process.args</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<h5 id="Annotations-Fields"><a href="#Annotations-Fields" class="headerlink" title="Annotations Fields"></a>Annotations Fields</h5><table>
+<thead>
+<tr>
+<th>Image Field</th>
+<th>Runtime Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>os</td>
+<td>annotations</td>
+<td>1,2</td>
+</tr>
+<tr>
+<td>architecture</td>
+<td>annotations</td>
+<td>1,3</td>
+</tr>
+<tr>
+<td>variant</td>
+<td>annotations</td>
+<td>1,4</td>
+</tr>
+<tr>
+<td>os.version</td>
+<td>annotations</td>
+<td>1,5</td>
+</tr>
+<tr>
+<td>os.features</td>
+<td>annotations</td>
+<td>1,6</td>
+</tr>
+<tr>
+<td>author</td>
+<td>annotations</td>
+<td>1,7</td>
+</tr>
+<tr>
+<td>created</td>
+<td>annotations</td>
+<td>1,8</td>
+</tr>
+<tr>
+<td>Config.Labels</td>
+<td>annotations</td>
+<td></td>
+</tr>
+<tr>
+<td>Config.StopSignal</td>
+<td>annotations</td>
+<td>1,9</td>
+</tr>
+</tbody></table>
+<h4 id="Parsed-Fields"><a href="#Parsed-Fields" class="headerlink" title="Parsed Fields"></a>Parsed Fields</h4><table>
+<thead>
+<tr>
+<th>Image Field</th>
+<th>Runtime Field</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Config.User</td>
+<td>process.user.*</td>
+</tr>
+</tbody></table>
+<h4 id="Optional-Fields"><a href="#Optional-Fields" class="headerlink" title="Optional Fields"></a>Optional Fields</h4><table>
+<thead>
+<tr>
+<th>Image Field</th>
+<th>Runtime Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Config.ExposedPorts</td>
+<td>annotations</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Config.Volumes</td>
+<td>mounts</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<h4 id="Annotations"><a href="#Annotations" class="headerlink" title="Annotations"></a>Annotations</h4><p>关于注解的三种模式</p>
+<ul>
+<li><code>Config.Labels</code> -&gt; configuration</li>
+<li><code>annotations</code> -&gt; manifest</li>
+<li><code>annotations</code> -&gt; image index</li>
+</ul>
+<h3 id="Descriptor"><a href="#Descriptor" class="headerlink" title="Descriptor"></a>Descriptor</h3><h4 id="属性-1"><a href="#属性-1" class="headerlink" title="属性"></a>属性</h4><ul>
+<li>mediaType | <em>string</em> | REQUIRED</li>
+<li>digest | <em>string</em> | REQUIRED</li>
+<li>size | <em>int64</em> | REQUIRED</li>
+<li>urls | <em>array of strings</em> | OPTIONAL</li>
+<li>annotations | <em>string-string-map</em> | OPTIONAL</li>
+<li>data | <em>string</em> | OPTIONAL</li>
+<li>artifactType | <em>string</em> | OPTIONAL</li>
+</ul>
+<h4 id="Digests-摘要"><a href="#Digests-摘要" class="headerlink" title="Digests 摘要"></a>Digests 摘要</h4><p>摘要命名规范</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">digest                ::= algorithm &quot;:&quot; encoded</span><br><span class="line">algorithm             ::= algorithm-component (algorithm-separator algorithm-component)*</span><br><span class="line">algorithm-component   ::= [a-z0-9]+</span><br><span class="line">algorithm-separator   ::= [+._-]</span><br><span class="line">encoded               ::= [a-zA-Z0-9=_-]+</span><br></pre></td></tr></table></figure>
+
+<h5 id="Digest-计算规则"><a href="#Digest-计算规则" class="headerlink" title="Digest 计算规则"></a>Digest 计算规则</h5><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">let ID(C) = Descriptor.digest</span><br><span class="line">let C = &lt;bytes&gt;</span><br><span class="line">let D = &#x27;&lt;alg&gt;:&#x27; + Encode(H(C))</span><br><span class="line">let verified = ID(C) == D</span><br></pre></td></tr></table></figure>
+
+<p>其中 H 为具体 哈希算法</p>
+<h5 id="已注册的算法"><a href="#已注册的算法" class="headerlink" title="已注册的算法"></a>已注册的算法</h5><table>
+<thead>
+<tr>
+<th>algorithm identifier</th>
+<th>algorithm</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sha256</td>
+<td>sha-256</td>
+</tr>
+<tr>
+<td>SHA512</td>
+<td>sha-512</td>
+</tr>
+</tbody></table>
+<h4 id="示例-5"><a href="#示例-5" class="headerlink" title="示例"></a>示例</h4><ul>
+<li>包含基础信息的 Manifest</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;size&quot;</span>: <span class="number">7682</span>,</span><br><span class="line">  <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>带有指定 url 的 Manifest</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;size&quot;</span>: <span class="number">7682</span>,</span><br><span class="line">  <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:5b0bcabd1ed22e9fb1310cf6c2dec7cdef19f0ad69efa1f392e94a4333501270&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;urls&quot;</span>: [</span><br><span class="line">    <span class="string">&quot;https://example.com/example-manifest&quot;</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>带有 artifact 的 manifest</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;mediaType&quot;</span>: <span class="string">&quot;application/vnd.oci.image.manifest.v1+json&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;size&quot;</span>: <span class="number">123</span>,</span><br><span class="line">  <span class="attr">&quot;digest&quot;</span>: <span class="string">&quot;sha256:87923725d74f4bfb94c9e86d64170f7521aad8221a5de834851470ca142da630&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;artifactType&quot;</span>: <span class="string">&quot;application/vnd.example.sbom.v1&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="最后的话"><a href="#最后的话" class="headerlink" title="最后的话"></a>最后的话</h3><p>其实个人把此作为 containerd 源码分析的番外篇，但是对于 OCI Image 部分的理解还是很有必要的，除了 containerd 相关的 OCI Interface 的定义，下沉到更加底层的操作，其实就是对此标准的封装。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com">kirago</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://kiragoo.github.com/archives/16cb3562.html">http://kiragoo.github.com/archives/16cb3562.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://kiragoo.github.com" target="_blank">kirago杂谈</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/OCI/">OCI</a></div><div class="post_share"><div class="social-share" data-image="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/gh/overtrue/share.js@master/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/archives/32158f45.html"><img class="next-cover" src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">containerd存储驱动一探究竟</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/config/avatar.jpeg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">kirago</div><div class="author-info__description">勿以浮沙筑高台</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">45</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">34</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/kiragoo" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:zhangl910201@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Specification-%E8%A7%A3%E8%AF%BB"><span class="toc-number">1.</span> <span class="toc-text">Specification 解读</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#OCI-Image-Media-Types"><span class="toc-number">1.1.</span> <span class="toc-text">OCI Image Media Types</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%84-Media-Type-%E5%85%B3%E8%81%94%E5%85%B3%E7%B3%BB"><span class="toc-number">1.1.1.</span> <span class="toc-text">各 Media Type 关联关系</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#spec-%E4%B8%AD%E4%B8%8A%E5%B1%82%E7%BB%84%E4%BB%B6%E6%8F%8F%E8%BF%B0"><span class="toc-number">2.</span> <span class="toc-text">spec 中上层组件描述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Image-Manifest"><span class="toc-number">2.1.</span> <span class="toc-text">Image Manifest</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%9E%E6%80%A7%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.1.1.</span> <span class="toc-text">属性介绍</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Image-Manifest-%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.1.2.</span> <span class="toc-text">Image Manifest 示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OCI-Image-Index-%E8%A7%A3%E8%AF%BB"><span class="toc-number">2.2.</span> <span class="toc-text">OCI Image Index 解读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%B1%9E%E6%80%A7%E8%A7%A3%E8%AF%BB"><span class="toc-number">2.2.1.</span> <span class="toc-text">具体属性解读</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Platform-Variants"><span class="toc-number">2.2.2.</span> <span class="toc-text">Platform Variants</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#OCI-Image-Index-%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.2.3.</span> <span class="toc-text">OCI Image Index 示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OCI-Image-Layout-Specification-%E8%A7%A3%E8%AF%BB"><span class="toc-number">2.3.</span> <span class="toc-text">OCI Image Layout Specification 解读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E5%AE%B9%E8%A7%A3%E8%AF%BB"><span class="toc-number">2.3.1.</span> <span class="toc-text">内容解读</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.3.2.</span> <span class="toc-text">示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Blogs-%E8%A7%A3%E8%AF%BB"><span class="toc-number">2.3.3.</span> <span class="toc-text">Blogs 解读</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-1"><span class="toc-number">2.3.3.1.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#oci-layout-file"><span class="toc-number">2.3.4.</span> <span class="toc-text">oci-layout file</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-2"><span class="toc-number">2.3.4.1.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#index-json-file"><span class="toc-number">2.3.5.</span> <span class="toc-text">index.json file</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-3"><span class="toc-number">2.3.5.1.</span> <span class="toc-text">示例</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Image-Layer-Filesystem-Changeset"><span class="toc-number">2.4.</span> <span class="toc-text">Image Layer Filesystem Changeset</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#gzip-Media-Types"><span class="toc-number">2.4.1.</span> <span class="toc-text">+gzip Media Types</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#zstd-Media-Types"><span class="toc-number">2.4.2.</span> <span class="toc-text">+zstd Media Types</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Change-Types"><span class="toc-number">2.4.3.</span> <span class="toc-text">Change Types</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#File-Types"><span class="toc-number">2.4.4.</span> <span class="toc-text">File Types</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#File-Attributes"><span class="toc-number">2.4.5.</span> <span class="toc-text">File Attributes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Creating"><span class="toc-number">2.4.6.</span> <span class="toc-text">Creating</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Initial-Root-Filesystem"><span class="toc-number">2.4.7.</span> <span class="toc-text">Initial Root Filesystem</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Populate-Initial-Filesystem"><span class="toc-number">2.4.8.</span> <span class="toc-text">Populate Initial Filesystem</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Populate-a-Comparison-Filesystem"><span class="toc-number">2.4.9.</span> <span class="toc-text">Populate a Comparison Filesystem</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Determining-Changes"><span class="toc-number">2.4.10.</span> <span class="toc-text">Determining Changes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Representing-Changes"><span class="toc-number">2.4.11.</span> <span class="toc-text">Representing Changes</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OCI-Image-Configuration"><span class="toc-number">2.5.</span> <span class="toc-text">OCI Image Configuration</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%9C%AF%E8%AF%AD"><span class="toc-number">2.5.1.</span> <span class="toc-text">关键术语</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Layer"><span class="toc-number">2.5.1.1.</span> <span class="toc-text">Layer</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Image-JSON"><span class="toc-number">2.5.1.2.</span> <span class="toc-text">Image JSON</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Layer-DiffID"><span class="toc-number">2.5.1.3.</span> <span class="toc-text">Layer DiffID</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Layer-ChainID"><span class="toc-number">2.5.1.4.</span> <span class="toc-text">Layer ChainID</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ImageID"><span class="toc-number">2.5.1.5.</span> <span class="toc-text">ImageID</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%9E%E6%80%A7"><span class="toc-number">2.5.2.</span> <span class="toc-text">属性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-4"><span class="toc-number">2.5.3.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Conversion-to-OCI-Runtime-Configuration"><span class="toc-number">2.6.</span> <span class="toc-text">Conversion to OCI Runtime Configuration</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%9E%E6%80%A7%E6%AF%94%E5%AF%B9%E8%A1%A8"><span class="toc-number">2.6.1.</span> <span class="toc-text">属性比对表</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Annotations-Fields"><span class="toc-number">2.6.1.1.</span> <span class="toc-text">Annotations Fields</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Parsed-Fields"><span class="toc-number">2.6.2.</span> <span class="toc-text">Parsed Fields</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Optional-Fields"><span class="toc-number">2.6.3.</span> <span class="toc-text">Optional Fields</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Annotations"><span class="toc-number">2.6.4.</span> <span class="toc-text">Annotations</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Descriptor"><span class="toc-number">2.7.</span> <span class="toc-text">Descriptor</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%9E%E6%80%A7-1"><span class="toc-number">2.7.1.</span> <span class="toc-text">属性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Digests-%E6%91%98%E8%A6%81"><span class="toc-number">2.7.2.</span> <span class="toc-text">Digests 摘要</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Digest-%E8%AE%A1%E7%AE%97%E8%A7%84%E5%88%99"><span class="toc-number">2.7.2.1.</span> <span class="toc-text">Digest 计算规则</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%B7%B2%E6%B3%A8%E5%86%8C%E7%9A%84%E7%AE%97%E6%B3%95"><span class="toc-number">2.7.2.2.</span> <span class="toc-text">已注册的算法</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-5"><span class="toc-number">2.7.3.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E5%90%8E%E7%9A%84%E8%AF%9D"><span class="toc-number">2.8.</span> <span class="toc-text">最后的话</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/archives/16cb3562.html" title="OCI Image Format Spec 解读"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OCI Image Format Spec 解读"/></a><div class="content"><a class="title" href="/archives/16cb3562.html" title="OCI Image Format Spec 解读">OCI Image Format Spec 解读</a><time datetime="2023-04-24T02:03:14.000Z" title="发表于 2023-04-24 10:03:14">2023-04-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/32158f45.html" title="containerd存储驱动一探究竟"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="containerd存储驱动一探究竟"/></a><div class="content"><a class="title" href="/archives/32158f45.html" title="containerd存储驱动一探究竟">containerd存储驱动一探究竟</a><time datetime="2023-04-23T03:16:44.000Z" title="发表于 2023-04-23 11:16:44">2023-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/archives/9ed9f81c.html" title="NRI:下一代节点细粒度资源控制方案">NRI:下一代节点细粒度资源控制方案</a><time datetime="2023-04-18T13:00:44.000Z" title="发表于 2023-04-18 21:00:44">2023-04-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/b783defe.html" title="从0构建web测试框架"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="从0构建web测试框架"/></a><div class="content"><a class="title" href="/archives/b783defe.html" title="从0构建web测试框架">从0构建web测试框架</a><time datetime="2023-04-14T09:04:45.000Z" title="发表于 2023-04-14 17:04:45">2023-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/archives/436e2913.html" title="containerd源码分析-[2]cri插件"><img src="https://kblogs.oss-cn-beijing.aliyuncs.com/blogimgs/index.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="containerd源码分析-[2]cri插件"/></a><div class="content"><a class="title" href="/archives/436e2913.html" title="containerd源码分析-[2]cri插件">containerd源码分析-[2]cri插件</a><time datetime="2023-04-03T13:04:54.000Z" title="发表于 2023-04-03 21:04:54">2023-04-03</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By kirago</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
